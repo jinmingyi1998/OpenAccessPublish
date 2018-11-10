@@ -1,26 +1,35 @@
 {% extends 'base.html' %}
 {% block content %}
-    <div class="container-fluid">
-        <main class="container">
-            <ul class="list-group">
-                {% for a in list %}
-                    <li class="container card">
-                        <div class="card-body">
-                            <a href="detail/{{ a.id }}"><h1 class="card-title text-center font-weight-bold">{{ a.title }}</h1></a>
-                            <dl class="card-text">
-                                <dt>Author:</dt>
-                                <dd>{{ a.author }}</dd>
-                                <dt>Date:</dt>
-                                <dd>{{ a.date.strftime('%Y-%m-%d %H:%M:%S') }}</dd>
-                                <dt>Highlight:</dt>
-                                <dd>
-                                    <p class="blockquote">{{ a.highlight }}</p>
-                                </dd>
-                            </dl>
-                            <a href="/download/{{ a.pdf }}" class="card-link">Download</a></div>
-                    </li>
-                {% endfor %}
-            </ul>
-        </main>
+    <div class="container">
+        <ul class="list-group">
+            <div class="container card">
+                <div class="card-header-tabs"><h2 class="card-title text-center">Search</h2></div>
+                <form action="" method="get" class="card-body card-text">
+                    <div class="form-group">{{ form.title.label }}{{ form.title(class='form-control') }}</div>
+                    <div class="form-group">{{ form.author.label }}{{ form.author(class='form-control') }}</div>
+                    <div class="form-group">{{ form.keyword.label }}{{ form.keyword(class='form-control') }}</div>
+                    <div class="form-group">{{ form.email.label }}{{ form.email(class='form-control') }}</div>
+                    <div class="form-group">{{ form.submit }}</div>
+                </form>
+            </div>
+            {% for a in list %}
+                <li class="container card">
+                    <div class="card-body">
+                        <a href="detail/{{ a.id }}"><h2
+                                class="card-title text-center font-weight-bold">{{ a.title }}</h2></a>
+                        <dl class="card-text">
+                            <dt>Author:</dt>
+                            <dd>{{ a.author }}</dd>
+                            <dt>Date:</dt>
+                            <dd>{{ a.date.strftime('%Y-%m-%d %H:%M:%S') }}</dd>
+                            <dt>Highlight:</dt>
+                            <dd>
+                                <p class="blockquote">{{ a.highlight }}</p>
+                            </dd>
+                        </dl>
+                        <a href="/download/{{ a.pdf }}" class="card-link">Download</a></div>
+                </li>
+            {% endfor %}
+        </ul>
     </div>
 {% endblock %}
