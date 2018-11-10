@@ -1,10 +1,37 @@
 {% extends 'base.html' %}
 {% block htmlhead %}
     <link rel="stylesheet" href="/static/editor/css/editormd.min.css">
+    <link rel="stylesheet" href="/static/editor/css/">
+    <script src="/static/js/jquery-3.3.1.min.js"></script>
+    <script src="/static/editor/editormd.min.js"></script>
+    <script src="/static/js/markdown.min.js"></script>
 
+    <script type="text/javascript">
+        $(function () {
+            var editor = editormd({
+                id: "editormd",
+                path: "/static/editor/lib/",
+                height: 300,
+                codeFold: true,
+                saveHTMLToTextarea: true,
+                searchReplace: true,
+                emoji: true,
+                taskList: true,
+                tocm: true,
+                tex: true,
+                flowChart: true,
+                sequenceDiagram: true
+            });
+            $('.md-fa').each(function () {
+                console.log($(this).text());
+                var res=markdown.toHTML($(this).text());
+                $(this).html(res);
+            })
+
+        });
+    </script>
 {% endblock %}
 {% block content %}
-
     <main class="container">
         <div class="card">
             <div class="card-body">
@@ -12,6 +39,7 @@
                     <h1 class="cart-title">{{ article.title }}</h1>
                 </div>
                 <p class="card-text"><b>Author:</b>{{ article.author }}</p>
+                <p class="card-text"><b>Email:</b>{{ article.email }}</p>
                 <p class="card-text"><b>Keyword:</b>{{ article.keyword }}</p>
                 <p class="card-text"><b>Date:</b>{{ article.date }}</p>
                 <p class="card-text"><b>Highlight:</b>{{ article.highlight }}</p>
@@ -49,30 +77,4 @@
             </form>
         </div>
     </main>
-    <script src="/static/js/jquery-3.3.1.min.js"></script>
-    <script src="/static/editor/editormd.min.js"></script>
-    <script src="/static/js/markdown.min.js"></script>
-    <script type="text/javascript">
-        $(function () {
-            var editor = editormd({
-                id: "editormd",
-                path: "/static/editor/lib/",
-                height: 300,
-                codeFold: true,
-                saveHTMLToTextarea: true,
-                searchReplace: true,
-                emoji: true,
-                taskList: true,
-                tocm: true,
-                tex: true,
-                flowChart: true,
-                sequenceDiagram: true
-            });
-            $('.md-fa').each(function () {
-                console.log($(this).text());
-                var res=markdown.toHTML($(this).text());
-                $(this).html(res);
-            })
-        });
-    </script>
 {% endblock %}
