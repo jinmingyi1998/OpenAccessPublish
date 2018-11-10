@@ -1,7 +1,7 @@
 from app import app, db, lm
 from flask import render_template, flash, redirect, g, session, url_for, request, get_flashed_messages, \
     send_from_directory
-from forms import LoginForm, RegisterForm, UploadForm, CommentForm
+from forms import LoginForm, RegisterForm, UploadForm, CommentForm, SearchArticleForm
 from models import User, Article, Comment
 from flask_login import login_user, logout_user, current_user, login_required
 import datetime
@@ -9,16 +9,13 @@ import datetime
 
 @app.route('/')
 def hello_world():
-    msgs = get_flashed_messages()
-    msg = ""
-    for ms in msgs:
-        msg += ms + " "
     print('index:')
     # print(current_user)
-    return render_template('index.html', msg=msg, title="HOME")
+    return render_template('index.html', title="OPEN ACCESS PUBLISHING")
 
 
-@app.route('/login', methods=['POST', 'GET'])
+# Login and register are not in using
+# @app.route('/login', methods=['POST', 'GET'])
 def login():
     form = LoginForm()
     if request.method == 'POST':
@@ -36,7 +33,8 @@ def login():
     return render_template('Login.html', title='Sign in', form=form)
 
 
-@app.route('/register', methods=['POST', 'GET'])
+# Login and register are not in using
+# @app.route('/register', methods=['POST', 'GET'])
 def register():
     form = RegisterForm()
     if request.method == 'POST':
@@ -54,13 +52,8 @@ def register():
     return render_template('register.html', title='Sign up', form=form)
 
 
-@app.route('/doc', methods=['GET'])
-@login_required
-def showlist():
-    return render_template('index.html', title='inside!')
-
-
-@app.route('/logout')
+# Login and register are not in using
+# @app.route('/logout')
 def logout():
     print('logout : ', end="")
     print(current_user)
@@ -68,7 +61,8 @@ def logout():
     return redirect('/')
 
 
-@app.before_request
+# Login and register are not in using
+# @app.before_request
 def before_request():
     g.user = current_user
 
@@ -96,8 +90,17 @@ def publish():
 
 @app.route('/search', methods=['GET'])
 def search():
+    form = SearchArticleForm()
+    if request.method == 'GET':
+        if form.validate_on_submit():
+            a = Article(title=form.title.data, author=form.author.data, highlight=form.highlight.data,
+                        keyword=form.keyword.data, email=form.email.data)
+            articles = Article.query.filter(Article.title.ilike(a.title), Article.author.ilike(a.author),
+                                            Article.highlight.ilike(a.highlight), Article.keyword.ilike(a.keyword),
+                                            Article.email.ilike(a.email)).all()
+            return render_template('search.html', list=articles, form=form)
     articles = Article.query.all()
-    return render_template('search.html', list=articles)
+    return render_template('search.html', list=articles, form=form)
 
 
 @app.route('/detail/<int:article_id>', methods=['GET', 'POST'])

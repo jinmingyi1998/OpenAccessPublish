@@ -50,3 +50,11 @@ class CommentForm(FlaskForm):
     comment = TextAreaField("Comment",
                             validators=[DataRequired(), Length(min=5, max=200, message='At least 5 letters!')])
     submit = SubmitField("Submit", render_kw={'class': 'btn btn-primary'})
+
+class SearchArticleForm(FlaskForm):
+    title = StringField("Title", validators=[ Length(min=3, max=50)])
+    author = StringField("Author", validators=[Length(min=1,max=50)])
+    keyword = StringField("Keywords", validators=[Length(max=100)])
+    email = StringField("Author Email", validators=[Email(message="email error")],
+                        render_kw={'placeholder': 'Email'})
+    submit = SubmitField("Submit", render_kw={'class': 'btn btn-primary'})
