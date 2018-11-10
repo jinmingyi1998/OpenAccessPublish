@@ -5,7 +5,11 @@
     <script src="/static/js/jquery-3.3.1.min.js"></script>
     <script src="/static/editor/editormd.min.js"></script>
     <script src="/static/js/markdown.min.js"></script>
-
+    <script type="text/x-mathjax-config">
+  MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+    </script>
     <script type="text/javascript">
         $(function () {
             var editor = editormd({
@@ -22,13 +26,12 @@
                 flowChart: true,
                 sequenceDiagram: true
             });
-            $('.md-fa').each(function () {
-                console.log($(this).text());
-                var res=markdown.toHTML($(this).text());
-                $(this).html(res);
-            })
-
-        });
+             $('.md-fa').each(function () {
+                 console.log($(this).text());
+                 var res = markdown.toHTML($(this).text());
+                 $(this).html(res);
+             })
+             });
     </script>
 {% endblock %}
 {% block content %}
@@ -48,13 +51,15 @@
         </div>
         <hr>
         <div class="container">
-        <h2>Comments:</h2>
+            <h2>Comments:</h2>
             <ul class="list-group">
                 {% for comment in comments %}
                     <li class="list-group-item">
                         <div class="card ">
                             <div class="card-title card-header font-weight-bold">{{ comment.email }}</div>
-                            <div class="card-body card-text"><div class="md-fa">{{ comment.content }}</div></div>
+                            <div class="card-body card-text">
+                                <div class="md-fa">{{ comment.content }}</div>
+                            </div>
                             <div class="card-footer text-muted text-sm-right">{{ comment.date.strftime('%Y-%m-%d %H:%M:%S') }}</div>
                         </div>
 
