@@ -7,11 +7,27 @@
     <script src="/static/js/markdown.min.js"></script>
     <script type="text/x-mathjax-config">
   MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+
+
+
+
+
+
+
+
+
+
+
+
+
     </script>
     <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
     </script>
     <script type="text/javascript">
         $(function () {
+            /*
+            editormd
+             */
             var editor = editormd({
                 id: "editormd",
                 path: "/static/editor/lib/",
@@ -26,21 +42,108 @@
                 flowChart: true,
                 sequenceDiagram: true
             });
-             $('.md-fa').each(function () {
-                 console.log($(this).text());
-                 var res = markdown.toHTML($(this).text());
-                 $(this).html(res);
-             })
-             });
+            /*
+            import mathjax
+             */
+            $('.md-fa').each(function () {
+                var res = markdown.toHTML($(this).text());
+                $(this).html(res);
+            })
+            /*
+            vote
+             */
+
+            $('img.vote').click(function () {
+                var str = $(this).attr("name");
+                console.log(str);
+                var ty = $(this).attr("votetype");
+                var tid = $(this).attr("voteid");
+                var tt=$(this).attr("votetarget")
+                var url = "/vote/"+tt+"/" + ty + "/" + tid;
+                var tmp = $(this).siblings("img.vote").attr('name');
+                if (tmp.search("1") == -1 && str.search("1") >= 0) {
+                    alert("You have voted!");
+                    return;
+                }
+                console.log(url)
+                $.post(url, {},
+                    function (data, status) {
+                        if (status == "success") {
+                            $("span.vote[votetarget='"+tt+"'][votetype='" + ty + "'][voteid='" + tid + "']").text(data);
+                            var url = "/ckvote/"+tt+"/" + ty + "/" + tid;
+                            $.post(url, {},
+                                function (data, status) {
+                                    if (status == "success") {
+                                        if (data == "1") {
+                                            str = ty;
+                                        }
+                                        else {
+                                            str = ty + "1";
+                                        }
+                                        $("img.vote[votetarget='"+tt+"'][votetype='" + ty + "'][voteid='" + tid + "']").attr({
+                                            "src": "/static/icon/" + str,
+                                            "name": str
+                                        });
+                                    }
+                                }
+                            );
+                        }
+                    }
+                );
+            });
+
+            $('img.vote').each(function () {
+                var str = $(this).attr("name");
+                var ty = $(this).attr("votetype");
+                var tid = $(this).attr("voteid");
+                var tt = $(this).attr("votetarget");
+                var url = "/ckvote/" + tt + "/" + ty + "/" + tid;
+                $.post(url, {},
+                    function (data, status) {
+                        if (status == "success") {
+                            if (data == "1") {
+                                str = str.substring(0, str.length - 1);
+                                $("img.vote[votetarget='" + tt + "'][votetype='" + ty + "'][voteid='" + tid + "']").attr({
+                                    "src": "/static/icon/" + str,
+                                    "name": str
+                                });
+                            }
+                        }
+                    }
+                );
+            });
+        })
+        ;
     </script>
+    <style>
+        .vote {
+            max-height: 2rem;
+            padding: 0px;
+        }
+    </style>
 {% endblock %}
 {% block content %}
     <main class="container">
         <div class="card">
-            <div class="card-body">
-                <div class="card-header">
-                    <h1 class="cart-title">{{ article.title }}</h1>
+            <div class="card-header">
+                <h1 class="cart-title">{{ article.title }}</h1>
+                <div class="float-right">
+                    <img src="/static/icon/down1" alt="Vote-down" id="votedown"
+                         class="img-responsive vote" name="down1"
+                         votetype="down" votetarget="article"
+                         voteid="{{ article.id }}">
+                    <span class="vote text-muted" votetype="down" votetarget="article"
+                          voteid="{{ article.id }}">{{ article.votedown }}</span>
+
+                    <img src="/static/icon/up1" alt="Vote-up" id="voteup"
+                         class="img-responsive vote" name="up1"
+                         votetype="up" votetarget="article"
+                         voteid="{{ article.id }}">
+                    <span class="vote text-muted" votetype="up" votetarget="article"
+                          voteid="{{ article.id }}">{{ article.voteup }}</span>
                 </div>
+            </div>
+            <div class="card-body">
                 <p class="card-text"><b>Author:</b>{{ article.author }}</p>
                 <p class="card-text"><b>Email:</b>{{ article.email }}</p>
                 <p class="card-text"><b>Keyword:</b>{{ article.keyword }}</p>
@@ -51,7 +154,7 @@
         </div>
         <hr>
         <div class="container">
-            <h2>Comments:</h2>
+            <h3>Comments:</h3>
             <ul class="list-group">
                 {% for comment in comments %}
                     <li class="list-group-item">
@@ -60,7 +163,28 @@
                             <div class="card-body card-text">
                                 <div class="md-fa">{{ comment.content }}</div>
                             </div>
-                            <div class="card-footer text-muted text-sm-right">{{ comment.date.strftime('%Y-%m-%d %H:%M:%S') }}</div>
+                            <div class="card-footer">
+                                <div class="float-left">
+
+                                    <img src="/static/icon/down1" alt="Vote-down" id="votedown"
+                                         class="img-responsive vote" name="down1"
+                                         votetype="down" votetarget="comment"
+                                         voteid="{{ comment.id }}">
+                                    <span class="vote text-muted" votetype="down" votetarget="comment"
+                                          voteid="{{ comment.id }}">{{ comment.votedown }}</span>
+
+                                    <img src="/static/icon/up1" alt="Vote-up" id="voteup"
+                                         class="img-responsive vote" name="up1"
+                                         votetype="up" votetarget="comment"
+                                         voteid="{{ comment.id }}">
+                                    <span class="vote text-muted" votetype="up" votetarget="comment"
+                                          voteid="{{ comment.id }}">{{ comment.voteup }}</span>
+
+                                </div>
+                                <div class="text-muted text-sm-right">
+                                    {{ comment.date.strftime('%Y-%m-%d %H:%M:%S') }}
+                                </div>
+                            </div>
                         </div>
 
                     </li>

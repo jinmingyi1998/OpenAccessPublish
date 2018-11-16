@@ -5,6 +5,7 @@ ROLE_USER = 0
 ROLE_ADMIN = 1
 
 
+# User class is unavailable
 class User(db.Model, UserMixin):
     __tablename__ = 'user'
     id = db.Column(db.Integer, primary_key=True)
@@ -40,6 +41,8 @@ class Article(db.Model):
     email = db.Column(db.String(50))
     date = db.Column(db.DateTime)
     pdf = db.Column(db.String(100))
+    voteup = db.Column(db.Integer, default=0)
+    votedown = db.Column(db.Integer, default=0)
 
 
 class Comment(db.Model):
@@ -47,7 +50,25 @@ class Comment(db.Model):
     email = db.Column(db.String(50))
     target = db.Column(db.Integer, db.ForeignKey(Article.id))
     content = db.Column(db.Text)
-    date=db.Column(db.DateTime)
+    date = db.Column(db.DateTime)
+    voteup = db.Column(db.Integer, default=0)
+    votedown = db.Column(db.Integer, default=0)
+
+
+class Vote():
+    id = db.Column(db.Integer, primary_key=True)
+    target_id = db.Column(db.Integer)
+    ip = db.Column(db.String(50))
+    date = db.Column(db.DateTime)
+    type = db.Column(db.String(50), default="up")
+
+class VoteArticle(Vote, db.Model):
+    pass
+
+
+class VoteComment(Vote, db.Model):
+    pass
+
 
 # db.drop_all()
 db.create_all()
