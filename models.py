@@ -62,12 +62,18 @@ class Vote():
     date = db.Column(db.DateTime)
     type = db.Column(db.String(50), default="up")
 
+
 class VoteArticle(Vote, db.Model):
     pass
 
 
 class VoteComment(Vote, db.Model):
     pass
+
+
+class BadUser(db.Model):
+    id=db.Column(db.Integer,primary_key=True)
+    ip = db.Column(db.String(20))
 
 
 # db.drop_all()

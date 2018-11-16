@@ -5,29 +5,9 @@
     <script src="/static/js/jquery-3.3.1.min.js"></script>
     <script src="/static/editor/editormd.min.js"></script>
     <script src="/static/js/markdown.min.js"></script>
-    <script type="text/x-mathjax-config">
-  MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
-
-
-
-
-
-
-
-
-
-
-
-
-
-    </script>
-    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
-    </script>
     <script type="text/javascript">
         $(function () {
-            /*
-            editormd
-             */
+            /* editormd */
             var editor = editormd({
                 id: "editormd",
                 path: "/static/editor/lib/",
@@ -37,29 +17,24 @@
                 searchReplace: true,
                 emoji: true,
                 taskList: true,
-                tocm: true,
-                tex: true,
+                tocm: false,
+                tex: false,
                 flowChart: true,
                 sequenceDiagram: true
             });
-            /*
-            import mathjax
-             */
+            /* import mathjax */
             $('.md-fa').each(function () {
                 var res = markdown.toHTML($(this).text());
                 $(this).html(res);
             })
-            /*
-            vote
-             */
-
+            /* vote */
             $('img.vote').click(function () {
                 var str = $(this).attr("name");
                 console.log(str);
                 var ty = $(this).attr("votetype");
                 var tid = $(this).attr("voteid");
-                var tt=$(this).attr("votetarget")
-                var url = "/vote/"+tt+"/" + ty + "/" + tid;
+                var tt = $(this).attr("votetarget")
+                var url = "/vote/" + tt + "/" + ty + "/" + tid;
                 var tmp = $(this).siblings("img.vote").attr('name');
                 if (tmp.search("1") == -1 && str.search("1") >= 0) {
                     alert("You have voted!");
@@ -69,8 +44,8 @@
                 $.post(url, {},
                     function (data, status) {
                         if (status == "success") {
-                            $("span.vote[votetarget='"+tt+"'][votetype='" + ty + "'][voteid='" + tid + "']").text(data);
-                            var url = "/ckvote/"+tt+"/" + ty + "/" + tid;
+                            $("span.vote[votetarget='" + tt + "'][votetype='" + ty + "'][voteid='" + tid + "']").text(data);
+                            var url = "/ckvote/" + tt + "/" + ty + "/" + tid;
                             $.post(url, {},
                                 function (data, status) {
                                     if (status == "success") {
@@ -80,7 +55,7 @@
                                         else {
                                             str = ty + "1";
                                         }
-                                        $("img.vote[votetarget='"+tt+"'][votetype='" + ty + "'][voteid='" + tid + "']").attr({
+                                        $("img.vote[votetarget='" + tt + "'][votetype='" + ty + "'][voteid='" + tid + "']").attr({
                                             "src": "/static/icon/" + str,
                                             "name": str
                                         });
@@ -91,7 +66,6 @@
                     }
                 );
             });
-
             $('img.vote').each(function () {
                 var str = $(this).attr("name");
                 var ty = $(this).attr("votetype");
@@ -112,8 +86,7 @@
                     }
                 );
             });
-        })
-        ;
+        });
     </script>
     <style>
         .vote {
@@ -124,7 +97,7 @@
 {% endblock %}
 {% block content %}
     <main class="container">
-        <div class="card">
+        <div class=" container card">
             <div class="card-header">
                 <h1 class="cart-title">{{ article.title }}</h1>
                 <div class="float-right">

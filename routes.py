@@ -1,8 +1,8 @@
 from app import app, db, lm
 from flask import render_template, flash, redirect, g, session, url_for, request, get_flashed_messages, \
-    send_from_directory
+    send_from_directory,abort
 from forms import LoginForm, RegisterForm, UploadForm, CommentForm, SearchArticleForm
-from models import User, Article, Comment, VoteArticle, VoteComment
+from models import User, Article, Comment, VoteArticle, VoteComment,BadUser
 from flask_login import login_user, logout_user, current_user, login_required
 import datetime
 
@@ -126,7 +126,7 @@ def detail(article_id):
                 return redirect('/detail/' + str(article_id))
         return render_template('detail.html', form=form, title='Detail', article=article, comments=comments)
     else:
-        return redirect('/n0tFoun6')
+        abort(404)
 
 
 @app.route('/download/<article_pdf>', methods=['GET'])
@@ -168,7 +168,7 @@ def vote(target_type, vote_type, vote_id):
                     Article.query.filter_by(id=vote_id).update({'vote' + vote_type: cnt})
                     db.session.commit()
                     return str(cnt)
-    return redirect('/n0t_fOun6')
+    abort(404)
 
 
 @app.route('/ckvote/<target_type>/<vote_type>/<vote_id>', methods=["POST"])
@@ -187,5 +187,11 @@ def ckvote(target_type, vote_type, vote_id):
                         return "1"
                     else:
                         return "0"
-    return redirect('/n0t_fOun6')
+    abort(404)
 
+@app.before_request
+def ip_filter():
+    ip=request.remote_addr
+    if BadUser.query.filter_by(ip=ip).count() > 0:
+        abort(403)
+    return
