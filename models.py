@@ -72,8 +72,14 @@ class VoteComment(Vote, db.Model):
 
 
 class BadUser(db.Model):
-    id=db.Column(db.Integer,primary_key=True)
+    id = db.Column(db.Integer, primary_key=True)
+    date = db.Column(db.Date)
     ip = db.Column(db.String(20))
+
+
+class BadWord(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    word = db.Column(db.String(50))
 
 
 # db.drop_all()

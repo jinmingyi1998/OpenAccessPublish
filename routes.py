@@ -1,10 +1,11 @@
 from app import app, db, lm
 from flask import render_template, flash, redirect, g, session, url_for, request, get_flashed_messages, \
-    send_from_directory,abort
+    send_from_directory, abort
 from forms import LoginForm, RegisterForm, UploadForm, CommentForm, SearchArticleForm
-from models import User, Article, Comment, VoteArticle, VoteComment,BadUser
+from models import User, Article, Comment, VoteArticle, VoteComment, BadUser, BadWord
 from flask_login import login_user, logout_user, current_user, login_required
 import datetime
+import re
 
 
 @app.route('/')
@@ -113,10 +114,7 @@ def detail(article_id):
         comments = Comment.query.filter_by(target=article.id).order_by(Comment.date.desc()).all()
         if request.method == 'POST':
             if form.validate_on_submit():
-                print(form.email.data)
-                print('------------------')
-                print(form.comment.data)
-                comment = Comment(target=article.id, content=form.comment.data, email=form.email.data, id=1)
+                comment = Comment(target=article.id, content=check_text(form.comment.data), email=form.email.data, id=1)
                 t_num = int(Comment.query.count())
                 if t_num > 0:
                     comment.id = Comment.query.order_by(Comment.id.desc()).first().id + 1
@@ -125,8 +123,15 @@ def detail(article_id):
                 db.session.commit()
                 return redirect('/detail/' + str(article_id))
         return render_template('detail.html', form=form, title='Detail', article=article, comments=comments)
-    else:
-        abort(404)
+    abort(404)
+
+
+def check_text(str):
+    s = str
+    res = BadWord.query.all()
+    for r in res:
+        s = re.sub(r.word, '  ', s)
+    return s
 
 
 @app.route('/download/<article_pdf>', methods=['GET'])
@@ -140,8 +145,9 @@ def vote(target_type, vote_type, vote_id):
         if vote_type == "up" or vote_type == "down":
             if target_type == "comment":
                 if int(Comment.query.filter_by(id=vote_id).count()) > 0:
-                    if VoteComment.query.filter_by(target_id=vote_id, ip=request.remote_addr,type=vote_type).count() > 0:
-                        VoteComment.query.filter_by(target_id=vote_id, ip=request.remote_addr,type=vote_type).delete()
+                    if VoteComment.query.filter_by(target_id=vote_id, ip=request.remote_addr,
+                                                   type=vote_type).count() > 0:
+                        VoteComment.query.filter_by(target_id=vote_id, ip=request.remote_addr, type=vote_type).delete()
                     else:
                         v = VoteComment(target_id=vote_id, ip=request.remote_addr, date=datetime.datetime.now(), id=1,
                                         type=vote_type)
@@ -155,8 +161,9 @@ def vote(target_type, vote_type, vote_id):
                     return str(cnt)
             elif target_type == "article":
                 if Article.query.filter_by(id=vote_id).count() > 0:
-                    if VoteArticle.query.filter_by(target_id=vote_id, ip=request.remote_addr,type=vote_type).count() > 0:
-                        VoteArticle.query.filter_by(target_id=vote_id, ip=request.remote_addr,type=vote_type).delete()
+                    if VoteArticle.query.filter_by(target_id=vote_id, ip=request.remote_addr,
+                                                   type=vote_type).count() > 0:
+                        VoteArticle.query.filter_by(target_id=vote_id, ip=request.remote_addr, type=vote_type).delete()
                     else:
                         v = VoteArticle(target_id=vote_id, ip=request.remote_addr, date=datetime.datetime.now(), id=1,
                                         type=vote_type)
@@ -177,21 +184,24 @@ def ckvote(target_type, vote_type, vote_id):
         if vote_type == "up" or vote_type == "down":
             if target_type == "comment":
                 if int(Comment.query.filter_by(id=vote_id).count()) > 0:
-                    if VoteComment.query.filter_by(target_id=vote_id, ip=request.remote_addr,type=vote_type).count() > 0:
+                    if VoteComment.query.filter_by(target_id=vote_id, ip=request.remote_addr,
+                                                   type=vote_type).count() > 0:
                         return "1"
                     else:
                         return '0'
             elif target_type == "article":
                 if Article.query.filter_by(id=vote_id).count() > 0:
-                    if VoteArticle.query.filter_by(target_id=vote_id, ip=request.remote_addr,type=vote_type).count() > 0:
+                    if VoteArticle.query.filter_by(target_id=vote_id, ip=request.remote_addr,
+                                                   type=vote_type).count() > 0:
                         return "1"
                     else:
                         return "0"
     abort(404)
 
+
 @app.before_request
 def ip_filter():
-    ip=request.remote_addr
+    ip = request.remote_addr
     if BadUser.query.filter_by(ip=ip).count() > 0:
         abort(403)
     return
