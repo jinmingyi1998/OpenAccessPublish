@@ -10,12 +10,9 @@ class Config:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     # Mail config
-    MAIL_SERVER = 'smtp.126.com'
+    MAIL_SERVER = 'smtp.qq.com'
     MAIL_PORT = 465
-    MAIL_USE_TLS = False
     MAIL_USE_SSL = True
-    MAIL_USERNAME = 'jinmingyi1998@126.com'
-    MAIL_PASSWORD = '19980313jmy'
-    ADMINS = ['jinmingyi1998@126.com']
-    POSTS_PER_PAGE = 25
+    MAIL_USERNAME = 'jinmingyi1998@qq.com'
+    MAIL_PASSWORD = 'ezbzznyxbwgodjdd'
 

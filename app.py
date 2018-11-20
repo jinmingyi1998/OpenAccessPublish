@@ -11,7 +11,7 @@ lm = LoginManager(app)
 lm.session_protection = 'strong'
 lm.login_view = '/login'
 mail = Mail(app)
-
+mail.init_app(app)
 from routes import *
 
 if __name__ == '__main__':
