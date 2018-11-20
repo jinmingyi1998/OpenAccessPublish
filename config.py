@@ -13,3 +13,4 @@ class Config:
     MAIL_USE_SSL = True
     MAIL_USERNAME = 'jinmingyi1998@qq.com'
     MAIL_PASSWORD = 'ezbzznyxbwgodjdd'
+    MAIL_DEFAULT_SENDER = 'jinmingyi1998@qq.com'

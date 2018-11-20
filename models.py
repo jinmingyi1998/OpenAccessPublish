@@ -1,5 +1,9 @@
 from flask_login import UserMixin
 from app import app, db, lm
+import datetime
+import random
+import base64
+import re
 
 ROLE_USER = 0
 ROLE_ADMIN = 1
@@ -81,6 +85,41 @@ class BadWord(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     word = db.Column(db.String(50))
 
+
+class Email(db.Model):
+    email = db.Column(db.String(40), primary_key=True)
+    validated = db.Column(db.String(10))
+    validate_time = db.Column(db.DateTime)
+    password = db.Column(db.String(100))
+
+    def is_exist(self):
+        num = Email.query.filter_by(email=self.email).count()
+        if num > 0:
+            print(self.email+"generating")
+            e = Email.query.filter_by(email=self.email).first()
+            self.validated=e.validated
+            self.validate_time=e.validate_time
+            self.password=e.password
+            return True
+        return False
+
+    def is_validated(self):
+        if self.validated == 'yes':
+            return True
+        return False
+
+    def __init__(self, email=None, is_validate='no', password='', validate_time=None):
+        self.email = email
+        self.validated = "no"
+        self.validate_time = validate_time
+        self.password = password
+
+    def generate_password(self):
+        pwd = str(int(datetime.datetime.now().strftime("%Y%m%d%H%M%S")) % 1000000007)
+        e = str(self.email)
+        pwd += re.sub('[@.]','',e)
+        self.password=pwd
+        return str(pwd)
 
 # db.drop_all()
 db.create_all()

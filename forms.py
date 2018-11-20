@@ -59,3 +59,8 @@ class SearchArticleForm(FlaskForm):
     keyword = StringField("Keywords")
     email = StringField("Author Email", render_kw={'placeholder': 'Email'})
     submit = SubmitField("Submit", render_kw={'class': 'btn btn-primary'})
+
+class EmailValidateForm(FlaskForm):
+    email = StringField("Email", validators=[DataRequired(), Email(message="email error")],
+                        render_kw={'placeholder': 'Email'})
+    submit = SubmitField("Submit", render_kw={'class': 'btn btn-primary'})

@@ -1,18 +1,27 @@
 from app import app, db, lm, mail
 from flask import render_template, flash, redirect, g, session, url_for, request, get_flashed_messages, \
     send_from_directory, abort
-from forms import LoginForm, RegisterForm, UploadForm, CommentForm, SearchArticleForm
-from models import User, Article, Comment, VoteArticle, VoteComment, BadUser, BadWord
+from forms import LoginForm, RegisterForm, UploadForm, CommentForm, SearchArticleForm, EmailValidateForm
+from models import User, Article, Comment, VoteArticle, VoteComment, BadUser, BadWord, Email
 from flask_login import login_user, logout_user, current_user, login_required
 from flask_mail import Message, Mail
 import datetime
 import re
 import os
+from threading import Thread
+
+
+def send_email_background(msg):
+    mail.send(msg)
+
+
+def send_email(msg):
+    thr = Thread(target=send_email_background, args=[msg])
+    thr.run()
 
 
 @app.route('/')
 def hello_world():
-    print('index:')
     # print(current_user)
     return render_template('index.html', title="OPEN ACCESS PUBLISHING")
 
@@ -73,31 +82,37 @@ def before_request():
 @app.route('/publish', methods=['POST', 'GET'])
 def publish():
     form = UploadForm()
+    msg = "You should only upload a pdf file"
     if request.method == 'POST':
         if form.validate_on_submit():
-            print(form.email.data, end=' ')
-            print(form.title.data)
-            article = form.to_Article()
-            article.id = str(1)
-            a_num = int(Article.query.count())
-            if a_num > 0:
-                article.id = str(int(Article.query.order_by(Article.id.desc()).first().id) + 1)
-            article.pdf = str(article.id) + '.pdf'
-            filename = os.path.join(app.root_path, "static", "pdf", article.id + '.pdf')
-            form.file.data.save(filename)
-            db.session.add(article)
-            db.session.commit()
-            # redirect is not sure
-            return redirect('/')
+            e = Email(email=form.email.data)
+            if e.is_exist() and e.is_validated():
+                article = form.to_Article()
+                article.id = str(1)
+                a_num = int(Article.query.count())
+                if a_num > 0:
+                    article.id = str(int(Article.query.order_by(Article.id.desc()).first().id) + 1)
+                article.pdf = str(article.id) + '.pdf'
+                filename = os.path.join(app.root_path, "static", "pdf", article.id + '.pdf')
+                form.file.data.save(filename)
+                db.session.add(article)
+                db.session.commit()
+                email_msg = Message(recipients=[form.email.data], subject='[OPEN ACCESS PUBLISH]Publish notification')
+                email_msg.body = 'CLICK HERE TO VALIDATE'
+                email_msg.html = "<h1>Notification</h1><p>You have published an <a href='jinmingyi.xin:8080/detail/%s'>article</a>.</p>" % str(
+                    article.id)
+                send_email(email_msg)
+                return redirect('/detail/' + str(article.id))
+            else:
+                msg = "You must validate your email address before you publish"
 
-    return render_template('publish.html', form=form, title='Publish')
+    return render_template('publish.html', form=form, title='Publish', message=msg)
 
 
 @app.route('/search', methods=['GET', 'POST'])
 def search():
     form = SearchArticleForm()
     if request.method == 'POST':
-        print(form.data)
         a = Article(title=form.title.data, author=form.author.data, keyword=form.keyword.data, email=form.email.data)
         articles = Article.query.filter(Article.title.like("%%%s%%" % a.title),
                                         Article.author.like("%%%s%%" % a.author),
@@ -198,6 +213,55 @@ def ckvote(target_type, vote_type, vote_id):
                         return "1"
                     else:
                         return "0"
+    abort(404)
+
+
+@app.route('/validator/<statu>', methods=['GET', 'POST'])
+@app.route('/validator/<statu>/<email>', methods=['GET', 'POST'])
+def email_validate(statu, email=None):
+    if email == None:
+        if statu == 'activate':
+            form = EmailValidateForm()
+            if request.method == 'POST':
+                if form.validate_on_submit():
+                    return redirect('/validator/validation/%s' % form.email.data)
+            return render_template('validate.html', title='Validate the email', form=form)
+    else:
+        e = Email(email=email)
+        if statu == 'validation':
+            if not e.is_exist():
+                e.generate_password()
+                email_msg = Message(recipients=[email], subject='OPEN ACCESS PUBLISH validation ')
+                email_msg.body = 'CLICK HERE TO VALIDATE'
+                email_msg.html = "<h1>Activation</h1><p><a href='jinmingyi.xin:8080/captcha/%s'>Click to activate</a></p>" % e.password
+                send_email(email_msg)
+                e.validate_time = datetime.datetime.now()
+                db.session.add(e)
+                db.session.commit()
+                return "We've already send you an validation email"
+            elif not e.is_validated():
+                return "<a href='/validator/resend/%s'>Didn't receive email?</a>" % email
+            else:
+                abort(404)
+        elif statu == 'resend':
+            if e.is_exist():
+                if not e.is_validated():
+                    email_msg = Message(recipients=[email], subject='OPEN ACCESS PUBLISH validation ')
+                    email_msg.body = 'CLICK HERE TO VALIDATE'
+                    email_msg.html = "<h1>Activation</h1><p><a href='jinmingyi.xin:8080/captcha/%s'>Click to activate</a></p>" % e.password
+                    send_email(email_msg)
+                    return "We've already send you an validation email"
+            abort(404)
+    abort(404)
+
+
+@app.route('/captcha/<password>', methods=['GET'])
+def validate_captcha(password):
+    num = Email.query.filter_by(password=password, validated='no').count()
+    if num > 0:
+        Email.query.filter_by(password=password).update({'validated': 'yes'})
+        db.session.commit()
+        return "Activation Success!<a href='/'>Back</a>"
     abort(404)
 
 
