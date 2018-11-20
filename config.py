@@ -1,5 +1,3 @@
-
-
 class Config:
     # csrf config
     CSRF_ENABLED = True
@@ -15,4 +13,3 @@ class Config:
     MAIL_USE_SSL = True
     MAIL_USERNAME = 'jinmingyi1998@qq.com'
     MAIL_PASSWORD = 'ezbzznyxbwgodjdd'
-

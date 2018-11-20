@@ -1,12 +1,13 @@
-from app import app, db, lm,mail
+from app import app, db, lm, mail
 from flask import render_template, flash, redirect, g, session, url_for, request, get_flashed_messages, \
     send_from_directory, abort
 from forms import LoginForm, RegisterForm, UploadForm, CommentForm, SearchArticleForm
 from models import User, Article, Comment, VoteArticle, VoteComment, BadUser, BadWord
 from flask_login import login_user, logout_user, current_user, login_required
-from flask_mail import Message,Mail
+from flask_mail import Message, Mail
 import datetime
 import re
+import os
 
 
 @app.route('/')
@@ -82,7 +83,7 @@ def publish():
             if a_num > 0:
                 article.id = str(int(Article.query.order_by(Article.id.desc()).first().id) + 1)
             article.pdf = str(article.id) + '.pdf'
-            filename = '/static/pdf/' + article.id + '.pdf'
+            filename = os.path.join(app.root_path, "static", "pdf", article.id + '.pdf')
             form.file.data.save(filename)
             db.session.add(article)
             db.session.commit()
