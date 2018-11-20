@@ -37,7 +37,7 @@ class UploadForm(FlaskForm):
     highlight = TextAreaField("Highlight")
     email = StringField("Email", validators=[DataRequired(), Email(message="email error")],
                         render_kw={'placeholder': 'Email'})
-    file = FileField("File", validators=[FileRequired(), FileAllowed(['pdf'])])
+    file = FileField("File(pdf)", validators=[FileRequired(), FileAllowed(['pdf'])])
     submit = SubmitField("Submit", render_kw={'class': 'btn btn-primary'})
 
     def to_Article(self):
@@ -46,7 +46,8 @@ class UploadForm(FlaskForm):
 
 
 class CommentForm(FlaskForm):
-    email = StringField("Email", validators=[DataRequired(), Email(message="email error")],
+    email = StringField("Email(You should activate your email beform you comment)",
+                        validators=[DataRequired(), Email(message="email error")],
                         render_kw={'placeholder': 'Email'})
     comment = TextAreaField("Comment",
                             validators=[DataRequired(), Length(min=5, max=200, message='At least 5 letters!')])
@@ -59,6 +60,7 @@ class SearchArticleForm(FlaskForm):
     keyword = StringField("Keywords")
     email = StringField("Author Email", render_kw={'placeholder': 'Email'})
     submit = SubmitField("Submit", render_kw={'class': 'btn btn-primary'})
+
 
 class EmailValidateForm(FlaskForm):
     email = StringField("Email", validators=[DataRequired(), Email(message="email error")],

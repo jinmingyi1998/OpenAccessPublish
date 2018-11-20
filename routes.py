@@ -131,14 +131,21 @@ def detail(article_id):
         comments = Comment.query.filter_by(target=article.id).order_by(Comment.date.desc()).all()
         if request.method == 'POST':
             if form.validate_on_submit():
-                comment = Comment(target=article.id, content=check_text(form.comment.data), email=form.email.data, id=1)
-                t_num = int(Comment.query.count())
-                if t_num > 0:
-                    comment.id = Comment.query.order_by(Comment.id.desc()).first().id + 1
-                comment.date = datetime.datetime.now()
-                db.session.add(comment)
-                db.session.commit()
-                return redirect('/detail/' + str(article_id))
+                e = Email(email=form.email.data)
+                if e.is_exist() and e.is_validated():
+                    comment = Comment(target=article.id, content=check_text(form.comment.data), email=form.email.data,
+                                      id=1)
+                    t_num = int(Comment.query.count())
+                    if t_num > 0:
+                        comment.id = Comment.query.order_by(Comment.id.desc()).first().id + 1
+                    comment.date = datetime.datetime.now()
+                    db.session.add(comment)
+                    db.session.commit()
+                    email_msg = Message(recipients=[e.email], subject="Notification")
+                    email_msg.html = """<h1>Notication</h1><p>Your email has made a comment 
+                    on <a href='jinmingyi.xin:8080/detail/%s'>website</a></p>""" % str(article_id)
+                    send_email(email_msg)
+                    return redirect('/detail/' + str(article_id))
         return render_template('detail.html', form=form, title='Detail', article=article, comments=comments)
     abort(404)
 
