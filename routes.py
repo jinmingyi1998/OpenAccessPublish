@@ -99,7 +99,7 @@ def publish():
                 db.session.commit()
                 email_msg = Message(recipients=[form.email.data], subject='[OPEN ACCESS PUBLISH]Publish notification')
                 email_msg.body = 'CLICK HERE TO VALIDATE'
-                email_msg.html = "<h1>Notification</h1><p>You have published an <a href='jinmingyi.xin:8080/detail/%s'>article</a>.</p>" % str(
+                email_msg.html = "<h1>Notification</h1><p>You have published an <a href='http://jinmingyi.xin:8080/detail/%s'>article</a>.</p>" % str(
                     article.id)
                 send_email(email_msg)
                 return redirect('/detail/' + str(article.id))
@@ -143,7 +143,7 @@ def detail(article_id):
                     db.session.commit()
                     email_msg = Message(recipients=[e.email], subject="Notification")
                     email_msg.html = """<h1>Notication</h1><p>Your email has made a comment 
-                    on <a href='jinmingyi.xin:8080/detail/%s'>website</a></p>""" % str(article_id)
+                    on <a href='http://jinmingyi.xin:8080/detail/%s'>website</a></p>""" % str(article_id)
                     send_email(email_msg)
                     return redirect('/detail/' + str(article_id))
         return render_template('detail.html', form=form, title='Detail', article=article, comments=comments)
@@ -240,7 +240,7 @@ def email_validate(statu, email=None):
                 e.generate_password()
                 email_msg = Message(recipients=[email], subject='OPEN ACCESS PUBLISH validation ')
                 email_msg.body = 'CLICK HERE TO VALIDATE'
-                email_msg.html = "<h1>Activation</h1><p><a href='jinmingyi.xin:8080/captcha/%s'>Click to activate</a></p>" % e.password
+                email_msg.html = "<h1>Activation</h1><p><a href='http://jinmingyi.xin:8080/captcha/%s'>Click to activate</a></p>" % e.password
                 send_email(email_msg)
                 e.validate_time = datetime.datetime.now()
                 db.session.add(e)
@@ -255,7 +255,7 @@ def email_validate(statu, email=None):
                 if not e.is_validated():
                     email_msg = Message(recipients=[email], subject='OPEN ACCESS PUBLISH validation ')
                     email_msg.body = 'CLICK HERE TO VALIDATE'
-                    email_msg.html = "<h1>Activation</h1><p><a href='jinmingyi.xin:8080/captcha/%s'>Click to activate</a></p>" % e.password
+                    email_msg.html = "<h1>Activation</h1><p><a href='http://jinmingyi.xin:8080/captcha/%s'>Click to activate</a></p>" % e.password
                     send_email(email_msg)
                     return "We've already send you an validation email"
             abort(404)
