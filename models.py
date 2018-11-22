@@ -89,6 +89,7 @@ class Email(db.Model):
     validated = db.Column(db.String(10))
     validate_time = db.Column(db.DateTime)
     password = db.Column(db.String(100))
+    ban = db.Column(db.String(10))
 
     def is_exist(self):
         num = Email.query.filter_by(email=self.email).count()
@@ -101,16 +102,24 @@ class Email(db.Model):
             return True
         return False
 
+    def is_banned(self):
+        if self.ban == 'yes':
+            return True
+        return False
+
     def is_validated(self):
+        if self.is_banned():
+            return False
         if self.validated == 'yes':
             return True
         return False
 
-    def __init__(self, email=None, is_validate='no', password='', validate_time=None):
+    def __init__(self, email=None, is_validate='no', password='', validate_time=None, ban='no'):
         self.email = email
         self.validated = "no"
         self.validate_time = validate_time
         self.password = password
+        self.ban=ban
 
     def generate_password(self):
         pwd = str(int(datetime.datetime.now().strftime("%Y%m%d%H%M%S")) % 1000000007)
@@ -121,7 +130,7 @@ class Email(db.Model):
 
 
 class Subject(db.Model):
-    id = db.Column(db.Integer, primary_key=True,autoincrement=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     subject = db.Column(db.String(50))
     number = db.Column(db.Integer)
 
@@ -131,6 +140,6 @@ def delete_rubbish():
     pass
 
 
-#db.drop_all()
+# db.drop_all()
 
 db.create_all()
