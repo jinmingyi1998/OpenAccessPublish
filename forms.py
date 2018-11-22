@@ -31,9 +31,9 @@ class RegisterForm(FlaskForm):
 
 
 class UploadForm(FlaskForm):
-    title = StringField("Title", validators=[DataRequired(), Length(min=3, max=50)])
+    title = StringField("Title", validators=[DataRequired(), Length(min=1, max=50)])
     author = StringField("Author", validators=[DataRequired()])
-    keyword = StringField("Keywords", validators=[DataRequired()])
+    subject = StringField("Subjects", validators=[DataRequired()],render_kw={'placeholder':'Split subjects by space'})
     highlight = TextAreaField("Highlight")
     email = StringField("Email", validators=[DataRequired(), Email(message="email error")],
                         render_kw={'placeholder': 'Email'})
@@ -42,7 +42,7 @@ class UploadForm(FlaskForm):
 
     def to_Article(self):
         return Article(title=self.title.data, author=self.author.data, highlight=self.highlight.data,
-                       keyword=self.keyword.data, date=datetime.datetime.now(), email=self.email.data)
+                       subject=self.subject.data, date=datetime.datetime.now(), email=self.email.data)
 
 
 class CommentForm(FlaskForm):
@@ -50,14 +50,14 @@ class CommentForm(FlaskForm):
                         validators=[DataRequired(), Email(message="email error")],
                         render_kw={'placeholder': 'Email'})
     comment = TextAreaField("Comment",
-                            validators=[DataRequired(), Length(min=5, max=200, message='At least 5 letters!')])
+                            validators=[DataRequired(), Length(min=5, message='At least 5 letters!')])
     submit = SubmitField("Submit", render_kw={'class': 'btn btn-primary'})
 
 
 class SearchArticleForm(FlaskForm):
     title = StringField("Title")
     author = StringField("Author")
-    keyword = StringField("Keywords")
+    subject = StringField("Subjects")
     email = StringField("Author Email", render_kw={'placeholder': 'Email'})
     submit = SubmitField("Submit", render_kw={'class': 'btn btn-primary'})
 

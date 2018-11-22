@@ -1,8 +1,6 @@
 from flask_login import UserMixin
 from app import app, db, lm
 import datetime
-import random
-import base64
 import re
 
 ROLE_USER = 0
@@ -41,7 +39,7 @@ class Article(db.Model):
     title = db.Column(db.String(50))
     author = db.Column(db.String(50))
     highlight = db.Column(db.Text)
-    keyword = db.Column(db.String(100))
+    subject = db.Column(db.String(100))
     email = db.Column(db.String(50))
     date = db.Column(db.DateTime)
     pdf = db.Column(db.String(100))
@@ -95,11 +93,11 @@ class Email(db.Model):
     def is_exist(self):
         num = Email.query.filter_by(email=self.email).count()
         if num > 0:
-            print(self.email+"generating")
+            print(self.email + "generating")
             e = Email.query.filter_by(email=self.email).first()
-            self.validated=e.validated
-            self.validate_time=e.validate_time
-            self.password=e.password
+            self.validated = e.validated
+            self.validate_time = e.validate_time
+            self.password = e.password
             return True
         return False
 
@@ -117,9 +115,22 @@ class Email(db.Model):
     def generate_password(self):
         pwd = str(int(datetime.datetime.now().strftime("%Y%m%d%H%M%S")) % 1000000007)
         e = str(self.email)
-        pwd += re.sub('[@.]','',e)
-        self.password=pwd
+        pwd += re.sub('[@.]', '', e)
+        self.password = pwd
         return str(pwd)
 
-# db.drop_all()
+
+class Subject(db.Model):
+    id = db.Column(db.Integer, primary_key=True,autoincrement=True)
+    subject = db.Column(db.String(50))
+    number = db.Column(db.Integer)
+
+
+# Delete all rubbish data in database after a time
+def delete_rubbish():
+    pass
+
+
+#db.drop_all()
+
 db.create_all()

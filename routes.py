@@ -1,10 +1,10 @@
 from app import app, db, lm, mail
 from flask import render_template, flash, redirect, g, session, url_for, request, get_flashed_messages, \
     send_from_directory, abort
-from forms import LoginForm, RegisterForm, UploadForm, CommentForm, SearchArticleForm, EmailValidateForm
-from models import User, Article, Comment, VoteArticle, VoteComment, BadUser, BadWord, Email
+from forms import *
+from models import *
 from flask_login import login_user, logout_user, current_user, login_required
-from flask_mail import Message, Mail
+from flask_mail import Message
 import datetime
 import re
 import os
@@ -96,6 +96,16 @@ def publish():
                 filename = os.path.join(app.root_path, "static", "pdf", article.id + '.pdf')
                 form.file.data.save(filename)
                 db.session.add(article)
+                subs = str(article.subject).split(" ")
+                print(subs)
+                for sut in subs:
+                    subject = Subject.query.filter_by(subject=sut).first()
+                    if subject is not None:
+                        subject.number += 1
+                    else:
+                        subject = Subject(subject=sut, number=1)
+                        db.session.add(subject)
+                print(article)
                 db.session.commit()
                 email_msg = Message(recipients=[form.email.data], subject='[OPEN ACCESS PUBLISH]Publish notification')
                 email_msg.body = 'CLICK HERE TO VALIDATE'
@@ -113,13 +123,13 @@ def publish():
 def search():
     form = SearchArticleForm()
     if request.method == 'POST':
-        a = Article(title=form.title.data, author=form.author.data, keyword=form.keyword.data, email=form.email.data)
+        a = Article(title=form.title.data, author=form.author.data, subject=form.subject.data, email=form.email.data)
         articles = Article.query.filter(Article.title.like("%%%s%%" % a.title),
                                         Article.author.like("%%%s%%" % a.author),
-                                        Article.keyword.like("%%%s%%" % a.keyword),
+                                        Article.subject.like("%%%s%%" % a.subject),
                                         Article.email.like("%%%s%%" % a.email)).order_by(Article.id.desc()).all()
         return render_template('search.html', list=articles, form=form)
-    articles = Article.query.all()
+    articles = Article.query.order_by(Article.id.desc()).all()
     return render_template('search.html', list=articles, form=form)
 
 
