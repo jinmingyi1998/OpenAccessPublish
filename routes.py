@@ -281,6 +281,9 @@ def validate_captcha(password):
         return "Activation Success!<a href='/'>Back</a>"
     abort(404)
 
+@app.route('/donate')
+def donation():
+    return render_template('donate.html',title="Donation")
 
 @app.before_request
 def ip_filter():
