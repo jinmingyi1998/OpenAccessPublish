@@ -1,6 +1,5 @@
 from app import app, db, lm, mail
-from flask import render_template, flash, redirect, g, session, url_for, request, get_flashed_messages, \
-    send_from_directory, abort
+from flask import render_template, flash, redirect, g, request, send_from_directory, abort
 from forms import *
 from models import *
 from flask_login import login_user, logout_user, current_user, login_required
@@ -22,8 +21,9 @@ def send_email(msg):
 
 @app.route('/')
 def hello_world():
-    # print(current_user)
-    return render_template('index.html', title="OPEN ACCESS PUBLISHING")
+    arts = Article.query.all()
+    arts = sorted(arts)
+    return render_template('index.html', title="OPEN ACCESS PUBLISHING", articles=arts)
 
 
 # Login and register are not in using
@@ -97,7 +97,6 @@ def publish():
                 form.file.data.save(filename)
                 db.session.add(article)
                 subs = str(article.subject).split(" ")
-                print(subs)
                 for sut in subs:
                     subject = Subject.query.filter_by(subject=sut).first()
                     if subject is not None:
@@ -105,7 +104,6 @@ def publish():
                     else:
                         subject = Subject(subject=sut, number=1)
                         db.session.add(subject)
-                print(article)
                 db.session.commit()
                 email_msg = Message(recipients=[form.email.data], subject='[OPEN ACCESS PUBLISH]Publish notification')
                 email_msg.body = 'CLICK HERE TO VALIDATE'
@@ -281,9 +279,11 @@ def validate_captcha(password):
         return "Activation Success!<a href='/'>Back</a>"
     abort(404)
 
+
 @app.route('/donate')
 def donation():
-    return render_template('donate.html',title="Donation")
+    return render_template('donate.html', title="Donation")
+
 
 @app.before_request
 def ip_filter():

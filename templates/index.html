@@ -6,4 +6,19 @@
             <h1 class="text-center">{{ title }}</h1>
         </div>
     </div>
+    <main class="container">
+        <div class="card">
+            <div class="card-title"><h2>Recomanded articles</h2></div>
+            <div class="card-body">
+                <ul class="list-group">
+                    {% for a in articles %}
+                        <li class="list-group-item">
+                            <h3><a class="card-link" href="/detail/{{ a.id }}">{{ a.title }}</a></h3>
+                            <p class="card-text">{{ a.author }}</p>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </main>
 {% endblock %}

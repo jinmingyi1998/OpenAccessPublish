@@ -35,6 +35,12 @@ def load_user(id):
 
 
 class Article(db.Model):
+    def __lt__(self, other):
+        if self.voteup-self.votedown == other.voteup-other.votedown:
+            return self.id>other.id
+        return self.voteup-self.votedown > other.voteup-other.votedown
+
+
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     title = db.Column(db.String(50))
     author = db.Column(db.String(50))
@@ -94,7 +100,6 @@ class Email(db.Model):
     def is_exist(self):
         num = Email.query.filter_by(email=self.email).count()
         if num > 0:
-            print(self.email + "generating")
             e = Email.query.filter_by(email=self.email).first()
             self.validated = e.validated
             self.validate_time = e.validate_time
@@ -142,4 +147,4 @@ def delete_rubbish():
 
 # db.drop_all()
 
-db.create_all()
+#db.create_all()
