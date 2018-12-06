@@ -6,7 +6,28 @@
     <script src="/static/editor/editormd.min.js"></script>
     <script src="/static/js/markdown.min.js"></script>
     <script type="text/javascript">
+        function checkcap() {
+            if ($("input#cap").val() == $("img#capimg").attr('ans')) {
+                console.log("yes");
+                return true;
+            }
+            console.log("no")
+            return false;
+        }
         $(function () {
+            $('img#capimg').click(function () {
+                $.post("/captcha",
+                    {
+                        que: $("input#cap").val(),
+                        ans: $("img#capimg").attr("ans")
+                    }, function (data, status) {
+                        if (status == "success")
+                            $('img#capimg').attr({
+                                'ans': data,
+                                'src': '/static/captcha/' + data + '.jpg'
+                            });
+                    });
+            });
             /* editormd */
             var editor = editormd({
                 id: "editormd",
@@ -51,8 +72,7 @@
                                     if (status == "success") {
                                         if (data == "1") {
                                             str = ty;
-                                        }
-                                        else {
+                                        } else {
                                             str = ty + "1";
                                         }
                                         $("img.vote[votetarget='" + tt + "'][votetype='" + ty + "'][voteid='" + tid + "']").attr({
@@ -174,8 +194,11 @@
                 </div>
                 <div id="editormd" class="form-group">{{ form.comment }}</div>
                 <div class="form-group">
-                    {{ form.submit }}
+                    <input type="text" name="cap" class="form-control" id="cap">
+                    <img src="/static/captcha/{{ captcha }}.jpg" alt="captcha" ans="{{ captcha }}" id="capimg">
                 </div>
+                <input class="btn btn-primary" id="submit" name="submit" type="submit" value="Submit"
+                       onclick="return checkcap()">
             </form>
         </div>
     </main>

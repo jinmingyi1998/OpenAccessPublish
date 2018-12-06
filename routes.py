@@ -82,6 +82,7 @@ def before_request():
 @app.route('/publish', methods=['POST', 'GET'])
 def publish():
     form = UploadForm()
+    captcha = getCaptcha()
     msg = "You should only upload a pdf file"
     if request.method == 'POST':
         if form.validate_on_submit():
@@ -114,7 +115,7 @@ def publish():
             else:
                 msg = "You must validate your email address before you publish"
 
-    return render_template('publish.html', form=form, title='Publish', message=msg)
+    return render_template('publish.html', form=form, title='Publish', message=msg, captcha=captcha)
 
 
 @app.route('/search', methods=['GET', 'POST'])
@@ -133,6 +134,7 @@ def search():
 
 @app.route('/detail/<int:article_id>', methods=['GET', 'POST'])
 def detail(article_id):
+    captcha = getCaptcha()
     form = CommentForm()
     article = Article.query.filter_by(id=article_id).first()
     if article is not None:
@@ -154,7 +156,8 @@ def detail(article_id):
                     on <a href='http://jinmingyi.xin:8080/detail/%s'>website</a></p>""" % str(article_id)
                     send_email(email_msg)
                     return redirect('/detail/' + str(article_id))
-        return render_template('detail.html', form=form, title='Detail', article=article, comments=comments)
+        return render_template('detail.html', form=form, title='Detail', article=article, comments=comments,
+                               captcha=captcha)
     abort(404)
 
 
@@ -283,6 +286,13 @@ def validate_captcha(password):
 @app.route('/donate')
 def donation():
     return render_template('donate.html', title="Donation")
+
+
+@app.route('/captcha',methods=['GET','POST'])
+def checkCaptcha():
+    if request.method=='POST':
+        return getCaptcha()
+    abort(400)
 
 
 @app.before_request

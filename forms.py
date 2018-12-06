@@ -4,6 +4,7 @@ from wtforms import PasswordField, SubmitField, TextAreaField, StringField, Bool
 from wtforms.validators import DataRequired, Email, EqualTo, Length, Regexp
 from models import Article
 import datetime
+from captcha import getCaptcha
 
 
 # Login and Register is unavailable
@@ -33,7 +34,7 @@ class RegisterForm(FlaskForm):
 class UploadForm(FlaskForm):
     title = StringField("Title", validators=[DataRequired(), Length(min=1, max=50)])
     author = StringField("Author", validators=[DataRequired()])
-    subject = StringField("Subjects", validators=[DataRequired()],render_kw={'placeholder':'Split subjects by space'})
+    subject = StringField("Subjects", validators=[DataRequired()], render_kw={'placeholder': 'Split subjects by space'})
     highlight = TextAreaField("Highlight")
     email = StringField("Email", validators=[DataRequired(), Email(message="email error")],
                         render_kw={'placeholder': 'Email'})
