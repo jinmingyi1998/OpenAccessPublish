@@ -34,27 +34,30 @@
 </head>
 <body>
 <nav class="navbar navbar-dark bg-light navbar-expand fixed-top">
-    <ul class="navbar-nav">
-{#        {% if not g.user.is_authenticated %}#}
-{#            <li class="nav-item"><a href="/login" class="btn">Login</a></li>#}
-{#            <li class="nav-item"><a href="/register" class="btn">Register</a></li>#}
-{#        {% else %}#}
-{#            {{ g.user.username }}#}
-{#            <li class="nav-item"><a href="/doc" class="btn">DOC</a></li>#}
-{#            <li class="nav-item"><a href="/logout" class="btn btn-danger">Logout</a></li>#}
-{#        {% endif %}#}
-        <li class="nav-item"><a href="/" class="btn">Home</a></li>
-        <li class="nav-item"><a href="/validator/activate" class="btn">Validate</a></li>
-        <li class="nav-item"><a href="/publish" class="btn">Publish</a></li>
-        <li class="nav-item"><a href="/search" class="btn">Search</a></li>
-        <li class="nav-item"><a href="/donate" class="btn">Donate</a></li>
-    </ul>
+    <div class="container">
+        <ul class="navbar-nav">
+            {#        {% if not g.user.is_authenticated %}#}
+            {#            <li class="nav-item"><a href="/login" class="btn">Login</a></li>#}
+            {#            <li class="nav-item"><a href="/register" class="btn">Register</a></li>#}
+            {#        {% else %}#}
+            {#            {{ g.user.username }}#}
+            {#            <li class="nav-item"><a href="/doc" class="btn">DOC</a></li>#}
+            {#            <li class="nav-item"><a href="/logout" class="btn btn-danger">Logout</a></li>#}
+            {#        {% endif %}#}
+            <li class="nav-item"><a href="/" class="btn">Home</a></li>
+            <li class="nav-item"><a href="/validator/activate" class="btn">Validate</a></li>
+            <li class="nav-item"><a href="{{ url_for('publish') }}" class="btn">Publish</a></li>
+            <li class="nav-item"><a href="{{ url_for('search') }}" class="btn">Search</a></li>
+            <li class="nav-item"><a href="{{ url_for('donation') }}" class="btn">Donate</a></li>
+        </ul>
+    </div>
 </nav>
 {% block content %}
 {% endblock %}
 <footer class="footer fixed-bottom">
     <div class="container">
-        <a href="https://gitee.com/jinmingyi/OOProject" target="_blank" class="text-muted text-center">©2018 Mingyi Jin &
+        <a href="https://gitee.com/jinmingyi/OOProject" target="_blank" class="text-muted text-center">©2018 Mingyi Jin
+            &
             Shiyi Chu. All rights reserved.</a>
     </div>
 </footer>

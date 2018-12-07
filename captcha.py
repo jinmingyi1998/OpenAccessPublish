@@ -1,5 +1,7 @@
 from PIL import Image, ImageDraw, ImageFont
 import random
+import os
+from app import app
 
 
 def rndChar():
@@ -19,7 +21,8 @@ def getCaptcha():
     width = 30 * 4
     height = 30
     image = Image.new('RGB', (width, height), (255, 255, 255))
-    font = ImageFont.truetype('font/Arial.ttf', 20)
+    filename = os.path.join(app.root_path, "font", 'arial.ttf')
+    font = ImageFont.truetype(filename, 20)
     draw = ImageDraw.Draw(image)
     for x in range(width):
         for y in range(height):
@@ -28,5 +31,6 @@ def getCaptcha():
         str += rndChar()
     for t in range(4):
         draw.text((30 * t + 10, 5), str[t], font=font, fill=rndColor2())
-    image.save('static/captcha/' + str + '.jpg', 'jpeg')
+    savename=os.path.join(app.root_path, "static","captcha", str+".jpg")
+    image.save(savename, 'jpeg')
     return str

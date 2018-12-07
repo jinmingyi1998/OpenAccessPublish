@@ -108,8 +108,8 @@ def publish():
                 db.session.commit()
                 email_msg = Message(recipients=[form.email.data], subject='[OPEN ACCESS PUBLISH]Publish notification')
                 email_msg.body = 'CLICK HERE TO VALIDATE'
-                email_msg.html = "<h1>Notification</h1><p>You have published an <a href='http://jinmingyi.xin:8080/detail/%s'>article</a>.</p>" % str(
-                    article.id)
+                email_msg.html = "<h1>Notification</h1><p>You have published an <a href='http://jinmingyi.xin:8080/detail/%s'>article</a>.</p>" % (str(
+                    article.id))
                 send_email(email_msg)
                 return redirect('/detail/' + str(article.id))
             else:

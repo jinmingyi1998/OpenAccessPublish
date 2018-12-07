@@ -6,7 +6,7 @@
         }
         $(function () {
             $('img#capimg').click(function () {
-                $.post("/captcha",
+                $.post("{{ url_for('checkCaptcha') }}",
                     {
                         que: $("input#cap").val(),
                         ans: $("img#capimg").attr("ans")
