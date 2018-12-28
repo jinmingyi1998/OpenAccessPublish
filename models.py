@@ -2,6 +2,7 @@ from flask_login import UserMixin
 from app import app, db, lm
 import datetime
 import re
+import time
 
 ROLE_USER = 0
 ROLE_ADMIN = 1
@@ -35,11 +36,14 @@ def load_user(id):
 
 
 class Article(db.Model):
-    def __lt__(self, other):
-        if self.voteup-self.votedown == other.voteup-other.votedown:
-            return self.id>other.id
-        return self.voteup-self.votedown > other.voteup-other.votedown
+    def __str__(self):
+        return "ID:%s title:%s" % (self.id, self.title)
 
+    def __lt__(self, other):
+        return self.point >other.point
+
+    def getEmail(self):
+        return re.sub("\\S{1,3}@\\S+", '**@**', self.email)
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     title = db.Column(db.String(50))
@@ -51,6 +55,21 @@ class Article(db.Model):
     pdf = db.Column(db.String(100))
     voteup = db.Column(db.Integer, default=0)
     votedown = db.Column(db.Integer, default=0)
+    is_hide = db.Column(db.String, default='no')
+    point = 0
+    visit = 0
+
+    def getVisit(self):
+        self.visit = int(IpRecord.query.filter_by(target_id=self.id, page="detail").group_by("ip").count())
+        return self.visit
+
+    def getPoint(self):
+        now = time.time()
+        t1 = self.date.timestamp()
+        delta_time = t1 - now
+        vote = self.voteup * 1.0 / (self.votedown + 1.0)
+        self.point = self.visit / delta_time * 100
+        return self.point
 
 
 class Comment(db.Model):
@@ -61,6 +80,9 @@ class Comment(db.Model):
     date = db.Column(db.DateTime)
     voteup = db.Column(db.Integer, default=0)
     votedown = db.Column(db.Integer, default=0)
+
+    def getEmail(self):
+        return re.sub("\\S{1,3}@\\S+", '**@***', self.email)
 
 
 class Vote():
@@ -124,7 +146,7 @@ class Email(db.Model):
         self.validated = "no"
         self.validate_time = validate_time
         self.password = password
-        self.ban=ban
+        self.ban = ban
 
     def generate_password(self):
         pwd = str(int(datetime.datetime.now().strftime("%Y%m%d%H%M%S")) % 1000000007)
@@ -140,11 +162,18 @@ class Subject(db.Model):
     number = db.Column(db.Integer)
 
 
+class IpRecord(db.Model):
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    ip = db.Column(db.String)
+    page = db.Column(db.String)
+    target_id = db.Column(db.Integer)
+
+
 # Delete all rubbish data in database after a time
 def delete_rubbish():
     pass
 
 
-# db.drop_all()
+db.drop_all()
 
-#db.create_all()
+db.create_all()
