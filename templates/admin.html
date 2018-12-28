@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% block content %}
+    <div class="container">
+        <a href="/admin/articles" class="btn btn-info btn-sm">Articles</a>
+        <a href="/admin/comments" class="btn btn-info btn-sm">Comments</a>
+        <button onclick="$.get('/admin/captcha',function() {alert('successed');})" class="btn btn-sm">Clear Captcha</button>
+    </div>
+    <main class="container">
+        {% if table %}
+            <table class="table table-responsive-xl table-bordered table-hover">
+                <thead>
+                <tr>
+                    {% for th in table.thead %}
+                        <th>{{ th }}</th>
+                    {% endfor %}
+                </tr>
+                </thead>
+                <tbody>
+                {% for r in table.items %}
+                    <tr>
+                        {% for d in r %}
+                            <td>{{ d }}</td>
+                        {% endfor %}
+                        <td><button class="btn-sm btn-danger"
+                                    onclick="remove({{ r[0] }},'{{ table.name }}')">
+                            remove</button></td>
+{#                        <td>xxdxx</td>#}
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        {% endif %}
+    </main>
+    <script>
+    function remove(id,type) {
+        $.get({
+            url:"/admin/delete/"+id+"/"+type,
+            success:function () {
+                alert("Delete "+type+" : id = "+id);
+                window.location.reload();
+            }
+        })
+    }
+    </script>
+{% endblock %}
