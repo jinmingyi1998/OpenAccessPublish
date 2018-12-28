@@ -122,8 +122,8 @@ def publish():
                 email_msg = Message(recipients=[form.email.data], subject='[OPEN ACCESS PUBLISH]Publish notification')
                 email_msg.body = 'CLICK HERE TO VALIDATE'
                 email_msg.html = "<h1>Notification</h1><p>You have published an <a href='http://jinmingyi.xin:8080/detail/%s'>article</a>.</p>" % (
-                str(
-                    article.id))
+                    str(
+                        article.id))
                 send_email(email_msg)
                 return redirect('/detail/' + str(article.id))
             else:
@@ -136,12 +136,13 @@ def publish():
 def search():
     form = SearchArticleForm()
     if request.method == 'POST':
-        a = Article(title=form.title.data, author=form.author.data, subject=form.subject.data, email=form.email.data)
-        articles = Article.query.filter(Article.title.like("%%%s%%" % a.title),
-                                        Article.author.like("%%%s%%" % a.author),
-                                        Article.subject.like("%%%s%%" % a.subject),
-                                        Article.email.like("%%%s%%" % a.email)).order_by(Article.id.desc()).all()
-        return render_template('search.html', list=articles, form=form)
+        content = form.content.data
+        a = Article(title=content, author=content, subject=content, email=content)
+        articles = Article.query.filter(Article.title.like("%%%s%%" % a.title) |
+                                        Article.author.like("%%%s%%" % a.author) |
+                                        Article.subject.like("%%%s%%" % a.subject)).order_by(Article.id.desc()).all()
+        comments = Comment.query.filter(Comment.content.like("%%%s%%" % content)).all()
+        return render_template('search.html', list=articles, form=form, commentlist=comments)
     articles = Article.query.filter_by(is_hide='no').order_by(Article.id.desc()).all()
     return render_template('search.html', list=articles, form=form)
 
@@ -325,3 +326,11 @@ def ip_filter():
     if BadUser.query.filter_by(ip=ip).count() > 0:
         abort(403)
     return
+
+
+@app.route('/author')
+def authorpage():
+    email = request.args.get('email')
+    a = Article.query.filter_by(email=email).all()
+    c = Comment.query.filter_by(email=email).all()
+    return render_template('author.html', title='Author Page', article=a, comment=c,email=email)
