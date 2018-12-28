@@ -8,6 +8,7 @@ import datetime
 import re
 import os
 from threading import Thread
+from tools import *
 
 
 def send_email_background(msg):
@@ -21,7 +22,10 @@ def send_email(msg):
 
 @app.route('/')
 def hello_world():
-    arts = Article.query.all()
+    arts = Article.query.filter_by(is_hide='no').all()
+    for a in arts:
+        a.getVisit()
+        a.getPoint()
     arts = sorted(arts)
     return render_template('index.html', title="OPEN ACCESS PUBLISHING", articles=arts)
 
@@ -79,6 +83,7 @@ def before_request():
     g.user = current_user
 
 
+# publish an article
 @app.route('/publish', methods=['POST', 'GET'])
 def publish():
     form = UploadForm()
@@ -105,15 +110,24 @@ def publish():
                     else:
                         subject = Subject(subject=sut, number=1)
                         db.session.add(subject)
+
+                # generate a record
+                record = IpRecord()
+                record.ip = request.remote_addr
+                record.page = "publish"
+                record.target_id = int(article.id)
+                db.session.add(record)
+
                 db.session.commit()
                 email_msg = Message(recipients=[form.email.data], subject='[OPEN ACCESS PUBLISH]Publish notification')
                 email_msg.body = 'CLICK HERE TO VALIDATE'
-                email_msg.html = "<h1>Notification</h1><p>You have published an <a href='http://jinmingyi.xin:8080/detail/%s'>article</a>.</p>" % (str(
+                email_msg.html = "<h1>Notification</h1><p>You have published an <a href='http://jinmingyi.xin:8080/detail/%s'>article</a>.</p>" % (
+                str(
                     article.id))
                 send_email(email_msg)
                 return redirect('/detail/' + str(article.id))
             else:
-                msg = "You must validate your email address before you publish"
+                msg = "You must activate your email address before you publish"
 
     return render_template('publish.html', form=form, title='Publish', message=msg, captcha=captcha)
 
@@ -128,7 +142,7 @@ def search():
                                         Article.subject.like("%%%s%%" % a.subject),
                                         Article.email.like("%%%s%%" % a.email)).order_by(Article.id.desc()).all()
         return render_template('search.html', list=articles, form=form)
-    articles = Article.query.order_by(Article.id.desc()).all()
+    articles = Article.query.filter_by(is_hide='no').order_by(Article.id.desc()).all()
     return render_template('search.html', list=articles, form=form)
 
 
@@ -138,8 +152,16 @@ def detail(article_id):
     form = CommentForm()
     article = Article.query.filter_by(id=article_id).first()
     if article is not None:
+        record = IpRecord()
+        record.page = "detail"
+        record.ip = request.remote_addr
+        record.target_id = article_id
+        db.session.add(record)
+        db.session.commit()
+        vis = int(IpRecord.query.filter_by(target_id=article_id, page="detail").group_by("ip").count())
+        article.visit = vis
         comments = Comment.query.filter_by(target=article.id).order_by(Comment.date.desc()).all()
-        if request.method == 'POST':
+        if request.method == 'POST':  # post a comment
             if form.validate_on_submit():
                 e = Email(email=form.email.data)
                 if e.is_exist() and e.is_validated():
@@ -151,10 +173,12 @@ def detail(article_id):
                     comment.date = datetime.datetime.now()
                     db.session.add(comment)
                     db.session.commit()
+                    # email actions
                     email_msg = Message(recipients=[e.email], subject="Notification")
                     email_msg.html = """<h1>Notication</h1><p>Your email has made a comment 
                     on <a href='http://jinmingyi.xin:8080/detail/%s'>website</a></p>""" % str(article_id)
                     send_email(email_msg)
+
                     return redirect('/detail/' + str(article_id))
         return render_template('detail.html', form=form, title='Detail', article=article, comments=comments,
                                captcha=captcha)
@@ -288,9 +312,9 @@ def donation():
     return render_template('donate.html', title="Donation")
 
 
-@app.route('/captcha',methods=['GET','POST'])
+@app.route('/captcha', methods=['GET', 'POST'])
 def checkCaptcha():
-    if request.method=='POST':
+    if request.method == 'POST':
         return getCaptcha()
     abort(400)
 
