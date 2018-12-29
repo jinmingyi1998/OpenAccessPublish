@@ -56,10 +56,7 @@ class CommentForm(FlaskForm):
 
 
 class SearchArticleForm(FlaskForm):
-    title = StringField("Title")
-    author = StringField("Author")
-    subject = StringField("Subjects")
-    email = StringField("Author Email", render_kw={'placeholder': 'Email'})
+    content = StringField("Search:", render_kw={"class": "form-control"}, validators=[DataRequired()])
     submit = SubmitField("Submit", render_kw={'class': 'btn btn-primary'})
 
 

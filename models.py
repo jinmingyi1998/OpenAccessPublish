@@ -4,6 +4,7 @@ import datetime
 import re
 import time
 
+# for users (unavailable)
 ROLE_USER = 0
 ROLE_ADMIN = 1
 
@@ -30,9 +31,9 @@ class User(db.Model, UserMixin):
         return False
 
 
-@lm.user_loader
-def load_user(id):
-    return User.query.get(int(id))
+# @lm.user_loader
+# def load_user(id):
+#    return User.query.get(int(id))
 
 
 class Article(db.Model):
@@ -40,7 +41,7 @@ class Article(db.Model):
         return "ID:%s title:%s" % (self.id, self.title)
 
     def __lt__(self, other):
-        return self.point >other.point
+        return self.point > other.point
 
     def getEmail(self):
         return re.sub("\\S{1,3}@\\S+", '**@**', self.email)
@@ -66,9 +67,9 @@ class Article(db.Model):
     def getPoint(self):
         now = time.time()
         t1 = self.date.timestamp()
-        delta_time = t1 - now
+        delta_time = now - t1
         vote = self.voteup * 1.0 / (self.votedown + 1.0)
-        self.point = self.visit / delta_time * 100
+        self.point = (self.visit / delta_time * 100) * 0.3 + vote * 0.7
         return self.point
 
 
@@ -156,12 +157,6 @@ class Email(db.Model):
         return str(pwd)
 
 
-class Subject(db.Model):
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    subject = db.Column(db.String(50))
-    number = db.Column(db.Integer)
-
-
 class IpRecord(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     ip = db.Column(db.String)
@@ -169,11 +164,16 @@ class IpRecord(db.Model):
     target_id = db.Column(db.Integer)
 
 
+class Subject(db.Model):
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    name = db.Column(db.String(30))
+    super_subject=db.Column(db.String(30))
+
+
 # Delete all rubbish data in database after a time
 def delete_rubbish():
     pass
 
-
-db.drop_all()
+# db.drop_all()
 
 db.create_all()

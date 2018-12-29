@@ -1,5 +1,5 @@
 from app import app, db, lm, mail
-from flask import render_template, flash, redirect, g, request, send_from_directory, abort
+from flask import render_template, flash, redirect, g, request, send_from_directory, abort, session
 from forms import *
 from models import *
 from flask_login import login_user, logout_user, current_user, login_required
@@ -83,9 +83,23 @@ def before_request():
     g.user = current_user
 
 
+# using session to limit repeat request
+def check_session(limit=5):
+    t1 = 0;
+    if session.get('timestamp') is not None:
+        t1 = session.get('timestamp')
+    delta = time.time() - t1
+    session['timestamp'] = time.time()
+    if (delta > limit):
+        return True
+    return False
+
+
 # publish an article
 @app.route('/publish', methods=['POST', 'GET'])
 def publish():
+    if not check_session(3):
+        abort(404)
     form = UploadForm()
     captcha = getCaptcha()
     msg = "You should only upload a pdf file"
@@ -93,6 +107,7 @@ def publish():
         if form.validate_on_submit():
             e = Email(email=form.email.data)
             if e.is_exist() and e.is_validated():
+                # generate an article
                 article = form.to_Article()
                 article.id = str(1)
                 a_num = int(Article.query.count())
@@ -102,14 +117,6 @@ def publish():
                 filename = os.path.join(app.root_path, "static", "pdf", article.id + '.pdf')
                 form.file.data.save(filename)
                 db.session.add(article)
-                subs = str(article.subject).split(" ")
-                for sut in subs:
-                    subject = Subject.query.filter_by(subject=sut).first()
-                    if subject is not None:
-                        subject.number += 1
-                    else:
-                        subject = Subject(subject=sut, number=1)
-                        db.session.add(subject)
 
                 # generate a record
                 record = IpRecord()
@@ -119,12 +126,15 @@ def publish():
                 db.session.add(record)
 
                 db.session.commit()
+
+                # send email
                 email_msg = Message(recipients=[form.email.data], subject='[OPEN ACCESS PUBLISH]Publish notification')
                 email_msg.body = 'CLICK HERE TO VALIDATE'
-                email_msg.html = "<h1>Notification</h1><p>You have published an <a href='http://jinmingyi.xin:8080/detail/%s'>article</a>.</p>" % (
+                email_msg.html = "<h1>Notification</h1><p>You have published an <a href='http://jinmingyi.xin:8080/detail/%s'>article</a></p>" % (
                     str(
                         article.id))
                 send_email(email_msg)
+
                 return redirect('/detail/' + str(article.id))
             else:
                 msg = "You must activate your email address before you publish"
@@ -163,7 +173,7 @@ def detail(article_id):
         article.visit = vis
         comments = Comment.query.filter_by(target=article.id).order_by(Comment.date.desc()).all()
         if request.method == 'POST':  # post a comment
-            if form.validate_on_submit():
+            if form.validate_on_submit() and check_session():
                 e = Email(email=form.email.data)
                 if e.is_exist() and e.is_validated():
                     comment = Comment(target=article.id, content=check_text(form.comment.data), email=form.email.data,
@@ -196,6 +206,8 @@ def check_text(str):
 
 @app.route('/download/<article_pdf>', methods=['GET'])
 def download_pdf(article_pdf):
+    if not check_session():
+        abort(404)
     return send_from_directory('static/pdf', article_pdf)
 
 
@@ -333,4 +345,4 @@ def authorpage():
     email = request.args.get('email')
     a = Article.query.filter_by(email=email).all()
     c = Comment.query.filter_by(email=email).all()
-    return render_template('author.html', title='Author Page', article=a, comment=c,email=email)
+    return render_template('author.html', title='Author Page', article=a, comment=c, email=email)

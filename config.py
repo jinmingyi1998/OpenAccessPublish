@@ -14,3 +14,6 @@ class Config:
     MAIL_USERNAME = 'jinmingyi1998@qq.com'
     MAIL_PASSWORD = 'ezbzznyxbwgodjdd'
     MAIL_DEFAULT_SENDER = 'jinmingyi1998@qq.com'
+
+    # upload limit 20M
+    MAX_CONTENT_LENGTH = 20000000
