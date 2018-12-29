@@ -8,6 +8,13 @@ import time
 ROLE_USER = 0
 ROLE_ADMIN = 1
 
+CSsubject=[]
+CSsubject.append('CS')
+CSsubject.append('computer science')
+CSsubject.append('Computer Science')
+CSsubject.append('ComputerScience')
+CSsubject.append('CompSci')
+
 
 # User class is unavailable
 class User(db.Model, UserMixin):
@@ -36,81 +43,14 @@ class User(db.Model, UserMixin):
 #    return User.query.get(int(id))
 
 
-class Article(db.Model):
-    def __str__(self):
-        return "ID:%s title:%s" % (self.id, self.title)
-
-    def __lt__(self, other):
-        return self.point > other.point
-
-    def getEmail(self):
-        return re.sub("\\S{1,3}@\\S+", '**@**', self.email)
-
+class Subject(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    title = db.Column(db.String(50))
-    author = db.Column(db.String(50))
-    highlight = db.Column(db.Text)
-    subject = db.Column(db.String(100))
-    email = db.Column(db.String(50))
-    date = db.Column(db.DateTime)
-    pdf = db.Column(db.String(100))
-    voteup = db.Column(db.Integer, default=0)
-    votedown = db.Column(db.Integer, default=0)
-    is_hide = db.Column(db.String, default='no')
-    point = 0
-    visit = 0
+    depth = db.Column(db.Integer, default=0)
+    name = db.Column(db.String(30))
+    super_subject = db.Column(db.String(30))
 
-    def getVisit(self):
-        self.visit = int(IpRecord.query.filter_by(target_id=self.id, page="detail").group_by("ip").count())
-        return self.visit
-
-    def getPoint(self):
-        now = time.time()
-        t1 = self.date.timestamp()
-        delta_time = now - t1
-        vote = self.voteup * 1.0 / (self.votedown + 1.0)
-        self.point = (self.visit / delta_time * 100) * 0.3 + vote * 0.7
-        return self.point
-
-
-class Comment(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    email = db.Column(db.String(50))
-    target = db.Column(db.Integer, db.ForeignKey(Article.id))
-    content = db.Column(db.Text)
-    date = db.Column(db.DateTime)
-    voteup = db.Column(db.Integer, default=0)
-    votedown = db.Column(db.Integer, default=0)
-
-    def getEmail(self):
-        return re.sub("\\S{1,3}@\\S+", '**@***', self.email)
-
-
-class Vote():
-    id = db.Column(db.Integer, primary_key=True)
-    target_id = db.Column(db.Integer)
-    ip = db.Column(db.String(50))
-    date = db.Column(db.DateTime)
-    type = db.Column(db.String(50), default="up")
-
-
-class VoteArticle(Vote, db.Model):
-    pass
-
-
-class VoteComment(Vote, db.Model):
-    pass
-
-
-class BadUser(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    date = db.Column(db.Date)
-    ip = db.Column(db.String(20))
-
-
-class BadWord(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    word = db.Column(db.String(50))
+    def __init__(self):
+        self.children = []
 
 
 class Email(db.Model):
@@ -157,6 +97,84 @@ class Email(db.Model):
         return str(pwd)
 
 
+class Article(db.Model):
+    def __str__(self):
+        return "ID:%s title:%s" % (self.id, self.title)
+
+    def __lt__(self, other):
+        return self.point > other.point
+
+    def getEmail(self):
+        return re.sub("\\S{1,3}@\\S+", '**@**', self.email)
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    title = db.Column(db.String(50))
+    author = db.Column(db.String(50))
+    highlight = db.Column(db.Text)
+    subject = db.Column(db.String(100), db.ForeignKey(Subject.name))
+    email = db.Column(db.String(50))
+    date = db.Column(db.DateTime)
+    pdf = db.Column(db.String(100))
+    voteup = db.Column(db.Integer, default=0)
+    votedown = db.Column(db.Integer, default=0)
+    is_hide = db.Column(db.String, default='no')
+    point = 0
+    visit = 0
+
+    def getVisit(self):
+        self.visit = int(IpRecord.query.filter_by(target_id=self.id, page="detail").group_by("ip").count())
+        return self.visit
+
+    def getPoint(self):
+        now = time.time()
+        t1 = self.date.timestamp()
+        delta_time = now - t1
+        vote = self.voteup * 1.0 / (self.votedown + 1.0)
+        self.point = (self.visit / delta_time * 100) * 0.3 + vote * 0.7
+        return self.point
+
+
+class Comment(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.String(50))
+    target = db.Column(db.Integer, db.ForeignKey(Article.id))
+    content = db.Column(db.Text)
+    date = db.Column(db.DateTime)
+    voteup = db.Column(db.Integer, default=0)
+    votedown = db.Column(db.Integer, default=0)
+
+    def getEmail(self):
+        return re.sub("\\S{1,3}@\\S+", '**@***', self.email)
+
+
+class Vote():
+    id = db.Column(db.Integer, primary_key=True)
+    ip = db.Column(db.String(50))
+    date = db.Column(db.DateTime)
+    type = db.Column(db.String(50), default="up")
+
+
+class VoteArticle(Vote, db.Model):
+    target_id = db.Column(db.Integer, db.ForeignKey(Article.id))
+    pass
+
+
+class VoteComment(Vote, db.Model):
+    target_id = db.Column(db.Integer, db.ForeignKey(Comment.id))
+    pass
+
+
+class BadUser(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    date = db.Column(db.Date)
+    ip = db.Column(db.String(20))
+
+
+class BadWord(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    word = db.Column(db.String(50))
+
+
 class IpRecord(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     ip = db.Column(db.String)
@@ -164,16 +182,11 @@ class IpRecord(db.Model):
     target_id = db.Column(db.Integer)
 
 
-class Subject(db.Model):
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    name = db.Column(db.String(30))
-    super_subject=db.Column(db.String(30))
-
-
 # Delete all rubbish data in database after a time
 def delete_rubbish():
     pass
 
-# db.drop_all()
+
+#db.drop_all()
 
 db.create_all()

@@ -11,24 +11,21 @@ from threading import Thread
 from tools import *
 
 
-def send_email_background(msg):
+def sendEmailBackground(msg):
     mail.send(msg)
 
 
-def send_email(msg):
-    thr = Thread(target=send_email_background, args=[msg])
-    thr.run()
+def sendEmail(msg):
+    thr = Thread(target=sendEmailBackground, args=[msg])
+    thr.start()
 
 
-@app.route('/')
-def hello_world():
-    arts = Article.query.filter_by(is_hide='no').all()
-    for a in arts:
-        a.getVisit()
-        a.getPoint()
-    arts = sorted(arts)
-
-    # get the subject tree
+def getSubjectTree():
+    '''
+    Every Subject is save as a class with a list named 'children', which contains all it children(not grandchild).
+    :return:
+    a list of all subject on root
+    '''
     subjects = []
     level1st = Subject.query.filter_by(depth=0).all()
     for s1 in level1st:
@@ -38,15 +35,24 @@ def hello_world():
             s2.__init__()
             level3rd = Subject.query.filter_by(super_subject=s2.id).all()
             for s3 in level3rd:
-                print("2 add 3", s2.name, s3.name)
                 s2.children.append(s3)
-            print("1 add 2", s1.name, s2.name)
             s1.children.append(s2)
-        print("add 1", s1.name)
         subjects.append(s1)
+    return subjects
+
+
+@app.route('/')
+def hello_world():
+    arts = Article.query.filter_by(is_hide='no').all()
+    for a in arts:
+        a.getVisit()
+        a.getPoint()
+    arts = sorted(arts)
+    # get the subject tree
+    subjects = getSubjectTree()
     return render_template('index.html', title="OPEN ACCESS PUBLISHING", articles=arts, subjects=subjects)
 
-
+'''
 # Login and register are not in using
 # @app.route('/login', methods=['POST', 'GET'])
 def login():
@@ -98,7 +104,7 @@ def logout():
 # @app.before_request
 def before_request():
     g.user = current_user
-
+'''
 
 # using session to limit repeat request
 def check_session(limit=5):
@@ -115,6 +121,11 @@ def check_session(limit=5):
 # publish an article
 @app.route('/publish', methods=['POST', 'GET'])
 def publish():
+    '''
+    If recieve a post, then regard as a publish form.
+    A form will create an article class and do related work
+    :return:
+    '''
     if not check_session(3):
         abort(404)
     form = UploadForm()
@@ -124,8 +135,13 @@ def publish():
         if form.validate_on_submit():
             e = Email(email=form.email.data)
             if e.is_exist() and e.is_validated():
-                # generate an article
+                # Every module below are independent
+
+                # generate an article and add it
                 article = form.to_Article()
+                for s in CSsubject:
+                    if s == article.subject:
+                        article.subject = 'Computer Sciences'
                 article.id = str(1)
                 a_num = int(Article.query.count())
                 if a_num > 0:
@@ -135,13 +151,23 @@ def publish():
                 form.file.data.save(filename)
                 db.session.add(article)
 
-                # generate a record
+                # if a subject is not exist, then create it
+                sub = Subject.query.filter_by(name=article.subject).first()
+                if sub is None:
+                    sub = Subject()
+                    sub.name = article.subject
+                    sub.super_subject = 0
+                    sub.depth = 0
+                    db.session.add(sub)
+
+                # generate a record and add it
                 record = IpRecord()
                 record.ip = request.remote_addr
                 record.page = "publish"
                 record.target_id = int(article.id)
                 db.session.add(record)
 
+                # after all work done, commit it
                 db.session.commit()
 
                 # send email
@@ -150,7 +176,7 @@ def publish():
                 email_msg.html = "<h1>Notification</h1><p>You have published an <a href='http://jinmingyi.xin:8080/detail/%s'>article</a></p>" % (
                     str(
                         article.id))
-                send_email(email_msg)
+                sendEmail(email_msg)
 
                 return redirect('/detail/' + str(article.id))
             else:
@@ -167,7 +193,8 @@ def search():
         a = Article(title=content, author=content, subject=content, email=content)
         articles = Article.query.filter(Article.title.like("%%%s%%" % a.title) |
                                         Article.author.like("%%%s%%" % a.author) |
-                                        Article.subject.like("%%%s%%" % a.subject)).order_by(Article.id.desc()).all()
+                                        Article.subject.like("%%%s%%" % a.subject)).filter_by(is_hide='no').order_by(
+            Article.id.desc()).all()
         comments = Comment.query.filter(Comment.content.like("%%%s%%" % content)).all()
         return render_template('search.html', list=articles, form=form, commentlist=comments)
     articles = Article.query.filter_by(is_hide='no').order_by(Article.id.desc()).all()
@@ -178,7 +205,7 @@ def search():
 def detail(article_id):
     captcha = getCaptcha()
     form = CommentForm()
-    article = Article.query.filter_by(id=article_id).first()
+    article = Article.query.filter_by(id=article_id, is_hide='no').first()
     if article is not None:
         record = IpRecord()
         record.page = "detail"
@@ -193,6 +220,7 @@ def detail(article_id):
             if form.validate_on_submit() and check_session():
                 e = Email(email=form.email.data)
                 if e.is_exist() and e.is_validated():
+                    # generate a comment and add it
                     comment = Comment(target=article.id, content=check_text(form.comment.data), email=form.email.data,
                                       id=1)
                     t_num = int(Comment.query.count())
@@ -200,12 +228,14 @@ def detail(article_id):
                         comment.id = Comment.query.order_by(Comment.id.desc()).first().id + 1
                     comment.date = datetime.datetime.now()
                     db.session.add(comment)
+
                     db.session.commit()
+
                     # email actions
                     email_msg = Message(recipients=[e.email], subject="Notification")
                     email_msg.html = """<h1>Notication</h1><p>Your email has made a comment 
                     on <a href='http://jinmingyi.xin:8080/detail/%s'>website</a></p>""" % str(article_id)
-                    send_email(email_msg)
+                    sendEmail(email_msg)
 
                     return redirect('/detail/' + str(article_id))
         return render_template('detail.html', form=form, title='Detail', article=article, comments=comments,
@@ -310,7 +340,7 @@ def email_validate(statu, recieve_email=None):
                 email_msg = Message(recipients=[recieve_email], subject='OPEN ACCESS PUBLISH validation ')
                 email_msg.body = 'CLICK HERE TO VALIDATE'
                 email_msg.html = "<h1>Activation</h1><p><a href='http://jinmingyi.xin:8080/captcha/%s'>Click to activate</a></p>" % e.password
-                send_email(email_msg)
+                sendEmail(email_msg)
                 e.validate_time = datetime.datetime.now()
                 db.session.add(e)
                 db.session.commit()
@@ -325,7 +355,7 @@ def email_validate(statu, recieve_email=None):
                     email_msg = Message(recipients=[recieve_email], subject='OPEN ACCESS PUBLISH validation ')
                     email_msg.body = 'CLICK HERE TO VALIDATE'
                     email_msg.html = "<h1>Activation</h1><p><a href='http://jinmingyi.xin:8080/captcha/%s'>Click to activate</a></p>" % e.password
-                    send_email(email_msg)
+                    sendEmail(email_msg)
                     return "We've already send you an validation email"
             abort(404)
     abort(404)
@@ -374,5 +404,7 @@ def subject_list():
     sub = request.args.get('subject')
     if sub is not None:
         articles = Article.query.filter_by(subject=sub).all()
+        for a in articles:
+            print(a)
         return render_template('subjectlist.html', title="Subject:" + sub, articles=articles)
     return redirect('/')

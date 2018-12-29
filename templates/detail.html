@@ -140,7 +140,7 @@
             <div class="card-body">
                 <p class="card-text"><b>Author:</b>{{ article.author }}</p>
                 <p class="card-text"><b>Email:</b><a href="{{ url_for('authorpage') }}?email={{ article.email }}">{{ article.getEmail() }}</a></p>
-                <p class="card-text"><b>Subject:</b>{{ article.subject }}</p>
+                <p class="card-text"><b>Subject:</b><a href="{{ url_for('subject_list') }}?subject={{ article.subject }}">{{ article.subject }}</a></p>
                 <p class="card-text"><b>Date:</b>{{ article.date.strftime('%Y-%m-%d %H:%M') }}</p>
                 <p class="card-text"><b>Highlight:</b>{{ article.highlight }}</p>
                 <a href="/download/{{ article.pdf }}" class="card-link">Download</a>
