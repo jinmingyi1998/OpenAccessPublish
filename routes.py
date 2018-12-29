@@ -27,7 +27,24 @@ def hello_world():
         a.getVisit()
         a.getPoint()
     arts = sorted(arts)
-    return render_template('index.html', title="OPEN ACCESS PUBLISHING", articles=arts)
+
+    # get the subject tree
+    subjects = []
+    level1st = Subject.query.filter_by(depth=0).all()
+    for s1 in level1st:
+        s1.__init__()
+        level2nd = Subject.query.filter_by(super_subject=s1.id).all()
+        for s2 in level2nd:
+            s2.__init__()
+            level3rd = Subject.query.filter_by(super_subject=s2.id).all()
+            for s3 in level3rd:
+                print("2 add 3", s2.name, s3.name)
+                s2.children.append(s3)
+            print("1 add 2", s1.name, s2.name)
+            s1.children.append(s2)
+        print("add 1", s1.name)
+        subjects.append(s1)
+    return render_template('index.html', title="OPEN ACCESS PUBLISHING", articles=arts, subjects=subjects)
 
 
 # Login and register are not in using
@@ -271,10 +288,13 @@ def ckvote(target_type, vote_type, vote_id):
     abort(404)
 
 
+from models import Email
+
+
 @app.route('/validator/<statu>', methods=['GET', 'POST'])
-@app.route('/validator/<statu>/<email>', methods=['GET', 'POST'])
-def email_validate(statu, email=None):
-    if email == None:
+@app.route('/validator/<statu>/<recieve_email>', methods=['GET', 'POST'])
+def email_validate(statu, recieve_email=None):
+    if recieve_email is None:
         if statu == 'activate':
             form = EmailValidateForm()
             if request.method == 'POST':
@@ -282,11 +302,12 @@ def email_validate(statu, email=None):
                     return redirect('/validator/validation/%s' % form.email.data)
             return render_template('validate.html', title='Validate the email', form=form)
     else:
-        e = Email(email=email)
+        e = Email()
+        e.email = recieve_email
         if statu == 'validation':
             if not e.is_exist():
                 e.generate_password()
-                email_msg = Message(recipients=[email], subject='OPEN ACCESS PUBLISH validation ')
+                email_msg = Message(recipients=[recieve_email], subject='OPEN ACCESS PUBLISH validation ')
                 email_msg.body = 'CLICK HERE TO VALIDATE'
                 email_msg.html = "<h1>Activation</h1><p><a href='http://jinmingyi.xin:8080/captcha/%s'>Click to activate</a></p>" % e.password
                 send_email(email_msg)
@@ -295,13 +316,13 @@ def email_validate(statu, email=None):
                 db.session.commit()
                 return "We've already send you an validation email"
             elif not e.is_validated():
-                return "<a href='/validator/resend/%s'>Didn't receive email?</a>" % email
+                return "<a href='/validator/resend/%s'>Didn't receive email?</a>" % recieve_email
             else:
                 abort(404)
         elif statu == 'resend':
             if e.is_exist():
                 if not e.is_validated():
-                    email_msg = Message(recipients=[email], subject='OPEN ACCESS PUBLISH validation ')
+                    email_msg = Message(recipients=[recieve_email], subject='OPEN ACCESS PUBLISH validation ')
                     email_msg.body = 'CLICK HERE TO VALIDATE'
                     email_msg.html = "<h1>Activation</h1><p><a href='http://jinmingyi.xin:8080/captcha/%s'>Click to activate</a></p>" % e.password
                     send_email(email_msg)
@@ -346,3 +367,12 @@ def authorpage():
     a = Article.query.filter_by(email=email).all()
     c = Comment.query.filter_by(email=email).all()
     return render_template('author.html', title='Author Page', article=a, comment=c, email=email)
+
+
+@app.route('/subject')
+def subject_list():
+    sub = request.args.get('subject')
+    if sub is not None:
+        articles = Article.query.filter_by(subject=sub).all()
+        return render_template('subjectlist.html', title="Subject:" + sub, articles=articles)
+    return redirect('/')
