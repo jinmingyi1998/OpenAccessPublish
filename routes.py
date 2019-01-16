@@ -406,5 +406,8 @@ def subject_list():
         articles = Article.query.filter_by(subject=sub).all()
         for a in articles:
             print(a)
+            a.getVisit()
+            a.getPoint()
+        articles = sorted(articles)
         return render_template('subjectlist.html', title="Subject:" + sub, articles=articles)
     return redirect('/')

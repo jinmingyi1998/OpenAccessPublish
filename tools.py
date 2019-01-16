@@ -62,8 +62,22 @@ class ArticleTable(Table):
             self.items.append(row)
 
 
+class BadWordTable(Table):
+    def __init__(self):
+        super().__init__()
+        self.name = 'bad word'
+        self.thead.append('id')
+        self.thead.append('word')
+        bad_words = BadWord.query.all()
+        for b in bad_words:
+            row = []
+            row.append(b.id)
+            row.append(b.word)
+            self.items.append(row)
+
+
 def remove_captcha():
-    for file in os.listdir("static/captcha"):
+    for file in os.listdir(os.path.join(app.root_path, 'static', 'captcha')):
         os.unlink(os.path.join(app.root_path, "static", "captcha", file))
 
 
@@ -118,6 +132,9 @@ def administrator(action=None):
     elif action == 'comments':
         c = CommentTable()
         return render_template("admin.html", title="Admin", table=c)
+    elif action == 'badword':
+        b = BadWordTable()
+        return render_template('admin.html', title="admin bad words", table=b)
     abort(404)
 
 
