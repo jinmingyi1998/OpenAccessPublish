@@ -8,6 +8,7 @@
 * flask-mail
 * flask-login
 * flask-uploads
+* pillow
 
 ### [Project address:http://jinmingyi.xin:8080](http://jinmingyi.xin:8080 "abc")
 
