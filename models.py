@@ -46,7 +46,7 @@ class User(db.Model, UserMixin):
 class Subject(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     depth = db.Column(db.Integer, default=0)
-    name = db.Column(db.String(30))
+    name = db.Column(db.String(50), unique=True)
     super_subject = db.Column(db.String(30))
 
     def __init__(self):
@@ -111,13 +111,13 @@ class Article(db.Model):
     title = db.Column(db.String(50))
     author = db.Column(db.String(50))
     highlight = db.Column(db.Text)
-    subject = db.Column(db.String(100), db.ForeignKey(Subject.name))
+    subject = db.Column(db.String(50), db.ForeignKey('subject.name'))
     email = db.Column(db.String(50))
     date = db.Column(db.DateTime)
     pdf = db.Column(db.String(100))
     voteup = db.Column(db.Integer, default=0)
     votedown = db.Column(db.Integer, default=0)
-    is_hide = db.Column(db.String, default='no')
+    is_hide = db.Column(db.String(10), default='no')
     point = 0
     visit = 0
 
@@ -137,7 +137,7 @@ class Article(db.Model):
 class Comment(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(50))
-    target = db.Column(db.Integer, db.ForeignKey(Article.id))
+    target = db.Column(db.Integer, db.ForeignKey("article.id"))
     content = db.Column(db.Text)
     date = db.Column(db.DateTime)
     voteup = db.Column(db.Integer, default=0)
@@ -155,12 +155,12 @@ class Vote():
 
 
 class VoteArticle(Vote, db.Model):
-    target_id = db.Column(db.Integer, db.ForeignKey(Article.id))
+    target_id = db.Column(db.Integer, db.ForeignKey("article.id"))
     pass
 
 
 class VoteComment(Vote, db.Model):
-    target_id = db.Column(db.Integer, db.ForeignKey(Comment.id))
+    target_id = db.Column(db.Integer, db.ForeignKey("comment.id"))
     pass
 
 
@@ -177,8 +177,8 @@ class BadWord(db.Model):
 
 class IpRecord(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    ip = db.Column(db.String)
-    page = db.Column(db.String)
+    ip = db.Column(db.String(50))
+    page = db.Column(db.String(50))
     target_id = db.Column(db.Integer)
 
 
@@ -187,6 +187,6 @@ def delete_rubbish():
     pass
 
 
-#db.drop_all()
+db.drop_all()
 
 db.create_all()
