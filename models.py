@@ -3,6 +3,7 @@ from app import app, db, lm
 import datetime
 import re
 import time
+import base64
 
 # for users (unavailable)
 ROLE_USER = 0
@@ -106,6 +107,9 @@ class Article(db.Model):
 
     def getEmail(self):
         return re.sub("\\S{1,3}@\\S+", '**@**', self.email)
+
+    def getB64Email(self):
+        return base64.b64encode(self.email)
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     title = db.Column(db.String(50))

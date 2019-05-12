@@ -52,6 +52,7 @@ def hello_world():
     subjects = getSubjectTree()
     return render_template('index.html', title="OPEN ACCESS PUBLISHING", articles=arts, subjects=subjects)
 
+
 '''
 # Login and register are not in using
 # @app.route('/login', methods=['POST', 'GET'])
@@ -105,6 +106,7 @@ def logout():
 def before_request():
     g.user = current_user
 '''
+
 
 # using session to limit repeat request
 def check_session(limit=5):
@@ -394,6 +396,7 @@ def ip_filter():
 @app.route('/author')
 def authorpage():
     email = request.args.get('email')
+    email = base64.b64decode(email)
     a = Article.query.filter_by(email=email).all()
     c = Comment.query.filter_by(email=email).all()
     return render_template('author.html', title='Author Page', article=a, comment=c, email=email)
