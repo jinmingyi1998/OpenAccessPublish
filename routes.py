@@ -1,5 +1,5 @@
 from app import app, db, lm, mail
-from flask import render_template, flash, redirect, g, request, send_from_directory, abort, session
+from flask import render_template, flash, redirect, g, request, send_from_directory, abort, session,make_response
 from forms import *
 from models import *
 from flask_login import login_user, logout_user, current_user, login_required
@@ -43,6 +43,7 @@ def getSubjectTree():
 
 @app.route('/')
 def hello_world():
+
     arts = Article.query.filter_by(is_hide='no').all()
     for a in arts:
         a.getVisit()
@@ -50,7 +51,9 @@ def hello_world():
     arts = sorted(arts)
     # get the subject tree
     subjects = getSubjectTree()
-    return render_template('index.html', title="OPEN ACCESS PUBLISHING", articles=arts, subjects=subjects)
+    rsp=make_response(render_template('index.html', title="OPEN ACCESS PUBLISHING", articles=arts, subjects=subjects))
+    rsp.set_cookie('online','1')
+    return rsp
 
 
 '''
@@ -387,6 +390,9 @@ def checkCaptcha():
 
 @app.before_request
 def ip_filter():
+    online=request.cookies.get('online')
+    if online!=1:
+        return redirect('/')
     ip = request.remote_addr
     if BadUser.query.filter_by(ip=ip).count() > 0:
         abort(403)
